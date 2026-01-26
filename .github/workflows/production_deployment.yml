@@ -34,7 +34,8 @@ jobs:
     - name: Deploy to FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
-        server: ftp://155.254.246.25
+        server: my-test-site.somee.com
         username: uacephemailto
         password: ${{ secrets.FTP_PASSWORD }}
         dry-run: true
+        local-dir: ./src/Api/bin/publish/
