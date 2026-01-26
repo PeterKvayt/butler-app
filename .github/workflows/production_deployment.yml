@@ -38,4 +38,4 @@ jobs:
         username: uacephemailto
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./src/Api/bin/publish/
-        server-dir: www.my-test-site.somee.com/app/
+        server-dir: www.my-test-site.somee.com/
