@@ -29,7 +29,7 @@ jobs:
       run: dotnet build --no-restore -c Release
     - name: Publish
       run: dotnet publish src/Api/Api.csproj -o src/Api/bin/publish -c Release -v n --no-build
-    - name: Deploy to FTP
+    #- name: Deploy to FTP
     # - uses: SamKirkland/FTP-Deploy-Action@v4.3.6
     #   with:
     #     server: ftp.samkirkland.com
