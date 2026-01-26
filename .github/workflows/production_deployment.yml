@@ -39,4 +39,4 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         dry-run: false
         local-dir: ./src/Api/bin/publish/
-        server-dir: d:/DZHosts/LocalUser/uacephemailto/www.my-test-site.somee.com/
+        server-dir: www.my-test-site.somee.com/app/
