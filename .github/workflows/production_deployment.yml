@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Vars test
-      run: echo "MY_REPO_SECRET - ${{ secrets.MY_REPO_SECRET }}; MY_ENV_VAR - ${{ vars.MY_ENV_VAR }}; MY_ENV_VAR_SECRET - ${{ vars.MY_ENV_VAR_SECRET }};"
+      run: echo "MY_ENV_VAR - ${{ vars.MY_ENV_VAR }}; MY_ENV_VAR_SECRET - ${{ vars.MY_ENV_VAR_SECRET }};"
     - name: Pull the repo
       uses: actions/checkout@v5
     - name: Setup .NET
@@ -17,7 +17,7 @@ jobs:
       with:
         dotnet-version: 10.0.102
     - name: Dotnet info
-      run: dotnet info
+      run: dotnet --info
     - name: Restore
       run: dotnet restore
     # cache restore if not exists https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsif
@@ -31,10 +31,10 @@ jobs:
       run: dotnet build --no-restore -c Release
     - name: Publish
       run: dotnet publish src/Api/Api.csproj -o src/Api/bin/publish -c Release -v n --no-build
-    # - name: Deploy to FTP
-    #   uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-    #   with:
-    #     server: ftp://my-test-site.somee.com/www.my-test-site.somee.com
-    #     username: uacephemailto
-    #     password: ${{ secrets.FTP_PASSWORD }}
-    #     dry-run: true
+    - name: Deploy to FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      with:
+        server: ftp://my-test-site.somee.com/www.my-test-site.somee.com
+        username: uacephemailto
+        password: ${{ secrets.FTP_PASSWORD }}
+        dry-run: true
