@@ -37,6 +37,5 @@ jobs:
         server: my-test-site.somee.com
         username: uacephemailto
         password: ${{ secrets.FTP_PASSWORD }}
-        dry-run: false
         local-dir: ./src/Api/bin/publish/
         server-dir: www.my-test-site.somee.com/app/
