@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Vars test
-      run: echo "Variable - ${{ SERVER_DIR }}"
+      run: echo "Variable - ${{ env.SERVER_DIR }}"
