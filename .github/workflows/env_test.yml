@@ -2,7 +2,8 @@ name: Env test
 on:
   push:
     branches: [main]
-env: production
+env:
+  SERVER_DIR: production
 jobs:
   test:
     name: Test job
