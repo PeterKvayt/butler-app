@@ -2,12 +2,11 @@ name: Env test
 on:
   push:
     branches: [main]
-env:
-  SERVER_DIR: production
 jobs:
   test:
     name: Test job
     runs-on: ubuntu-latest
+    environment: production
     steps:
     - name: Vars test
-      run: echo "Variable - ${{ env.SERVER_DIR }}"
+      run: echo "Variable - ${{ vars.SERVER_DIR }}"
