@@ -36,5 +36,5 @@ jobs:
         server: ${{ vars.SERVER_URL }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./src/Api/bin/publish/
+        local-dir: ./src/Api/bin/publish/ # directory with artifacts from prev step
         server-dir: ${{ vars.SERVER_DIR }}

@@ -400,8 +400,7 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# NuGet config
-NuGet.config
-
 # docker-compose env variables #
 .env
+
+**/logs/
