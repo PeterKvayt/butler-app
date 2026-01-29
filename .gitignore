@@ -405,3 +405,5 @@ NuGet.config
 
 # docker-compose env variables #
 .env
+
+**/logs/
