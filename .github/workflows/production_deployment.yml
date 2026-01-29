@@ -7,9 +7,8 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    environment: production
     steps:
-    - name: Vars test
-      run: echo "MY_ENV_VAR - ${{ vars.MY_ENV_VAR }}; MY_ENV_VAR_SECRET - ${{ vars.MY_ENV_VAR_SECRET }};"
     - name: Pull the repo
       uses: actions/checkout@v5
     - name: Setup .NET
