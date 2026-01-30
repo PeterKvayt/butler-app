@@ -11,6 +11,15 @@ jobs:
     steps:
     - name: Pull the repo
       uses: actions/checkout@v5
+    - name: Setup secrets
+      # env:
+      #   APP_SECRET: ${{ secrets.TEST_SECRET }}
+      run: |
+        $configFile = "src/Api/appsettings.json"
+        $content = Get-Content $configFile -Raw
+        $content = $content -replace '#\{APP_SECRET\}#', '${{ secrets.TEST_SECRET }}'
+        $content | Set-Content $configFile
+        Get-Content $configFile
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
