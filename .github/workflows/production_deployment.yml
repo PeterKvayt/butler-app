@@ -18,7 +18,8 @@ jobs:
       with:
         files: '**/appsettings.json'
         key-value-pairs: |
-          AppSecret=${{ secrets.TEST_SECRET }}
+          ConnectionStrings.Telegram=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          App.BaseUrl=https://${{ vars.SERVER_DOMAIN_NAME }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -34,7 +35,7 @@ jobs:
     - name: Deploy to FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
-        server: ${{ vars.SERVER_URL }}
+        server: ${{ vars.SERVER_DOMAIN_NAME }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./src/Api/bin/publish/ # directory with artifacts from prev step
