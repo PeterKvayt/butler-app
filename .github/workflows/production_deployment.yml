@@ -1,5 +1,7 @@
-name: Production CI/CD
-run-name: Deploy 🚀 to ${{ inputs.deploy_target }} by @${{ github.actor }} 
+# TODO: add caching
+
+#name: Deploy
+#run-name: Deploy 🚀 to ${{ inputs.deploy_target }} by @${{ github.actor }} 
 on:
   push:
     branches: [main]
@@ -11,6 +13,12 @@ jobs:
     steps:
     - name: Pull the repo
       uses: actions/checkout@v5
+    - name: Transform appsettings
+      uses: tnikFi/json-file-transform@v3
+      with:
+        files: '**/appsettings.json'
+        key-value-pairs: |
+          AppSecret=${{ secrets.TEST_SECRET }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -19,13 +27,6 @@ jobs:
       run: dotnet --info
     - name: Restore
       run: dotnet restore
-    # cache restore if not exists https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsif
-    # - name: Cache restore
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: |
-    #       ~/.gradle/caches
-    #       ~/.gradle/wrapper
     - name: Build
       run: dotnet build --no-restore -c Release
     - name: Publish
