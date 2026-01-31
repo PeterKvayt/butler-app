@@ -11,15 +11,20 @@ jobs:
     steps:
     - name: Pull the repo
       uses: actions/checkout@v5
-    - name: Setup secrets
+    - name: Transform appsettings
+      uses: tnikFi/json-file-transform@v3
+      with:
+        files: '**/appsettings.json'
+        key-value-pairs: |
+          AppSecret=${{ secrets.TEST_SECRET }}
       # env:
       #   APP_SECRET: ${{ secrets.TEST_SECRET }}
-      run: |
-        $configFile = "src/Api/appsettings.json"
-        $content = Get-Content $configFile -Raw
-        $content = $content -replace '#\{APP_SECRET\}#', '${{ secrets.TEST_SECRET }}'
-        $content | Set-Content $configFile
-        Get-Content $configFile
+      # run: |
+      #   $configFile = "src/Api/appsettings.json"
+      #   $content = Get-Content $configFile -Raw
+      #   $content = $content -replace '#\{APP_SECRET\}#', '${{ secrets.TEST_SECRET }}'
+      #   $content | Set-Content $configFile
+      #   Get-Content $configFile
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
