@@ -1,4 +1,5 @@
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace Api.Features.Telegram.Features.Infrastructure;
 
@@ -20,24 +21,28 @@ internal static class Composition
 
     private static WebApplicationBuilder AddTelegramBot(this WebApplicationBuilder builder)
     {
-        var key = builder.Configuration.GetConnectionString("Telegram")
-            ?? throw new InvalidOperationException("Telegram key was null");
-        var bot = new TelegramBotClient(key);
+        var botToken = builder.Configuration.GetValue<string>("Telegram:BotToken")
+            ?? throw new InvalidOperationException("Telegram:BotToken is null");
 
-        builder.Services.AddSingleton<ITelegramBotClient>(bot);
+        builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 
         return builder;
     }
 
     private static async Task SetupTelegramWebhookAsync(this WebApplication app)
     {
+        var webhookSecret = app.Configuration.GetValue<string>("Telegram:WebhookSecret")
+            ?? throw new InvalidOperationException("Telegram:WebhookSecret is null");
         var baseUrl = app.Configuration.GetValue<string>("App:BaseUrl")
             ?? throw new InvalidOperationException("App:BaseUrl is null");
         var webhookUrl = $"{baseUrl}/{UpdateHandler.Endpoint.Segment}";
 
         var client = app.Services.GetRequiredService<ITelegramBotClient>();
 
-        // TODO: separate to endpoints by Telegram.Bot.Types.Enums.UpdateType
-        await client.SetWebhook(webhookUrl, allowedUpdates: []);
+        await client.SetWebhook(webhookUrl, 
+            allowedUpdates: [UpdateType.Message], 
+            dropPendingUpdates: false,
+            secretToken: webhookSecret
+        );
     }
 }

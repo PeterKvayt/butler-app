@@ -18,7 +18,8 @@ jobs:
       with:
         files: '**/appsettings.json'
         key-value-pairs: |
-          ConnectionStrings.Telegram=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          Telegram.BotToken=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          Telegram.WebhookSecret=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
           App.BaseUrl=https://${{ vars.SERVER_DOMAIN_NAME }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
