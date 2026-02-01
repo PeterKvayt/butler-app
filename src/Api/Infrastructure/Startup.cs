@@ -1,7 +1,6 @@
-using Api.Infrastructure.Logging;
 using Api.Features.Ping;
-using Api.Infrastructure.Telegram;
-using Api.Features.TelegramTest;
+using Api.Features.Telegram;
+using Api.Infrastructure.Logging;
 
 namespace Api.Infrastructure;
 
@@ -11,8 +10,7 @@ internal static class Statup
     {
         builder
             .AddLogging()
-            .AddTelegramBot()
-            .AddTelegramUpdateHandler();
+            .AddTelegram();
 
         return builder;
     }
@@ -20,10 +18,10 @@ internal static class Statup
     internal static WebApplication ConfigurePipeline(this WebApplication app)
     {
         app.UseHttpsRedirection();
-        
+
         app
-            .AddPingEndpoint()
-            .AddTelegramUpdateEndpoint();
+            .UsePing()
+            .UseTelegram();
 
         return app;
     }
