@@ -1,13 +1,13 @@
-using Api.Features.TelegramTest.Services.UpdateHandler;
+using Api.Features.Telegram.Features.UpdateHandler.Services.UpdateHandler;
 using Telegram.Bot.Types;
 
-namespace Api.Features.TelegramTest;
+namespace Api.Features.Telegram.Features.UpdateHandler;
 
 internal static class Endpoint
 {
-    internal const string Segment = "update";
+    internal const string Segment = "bot/handle";
 
-    internal static IEndpointRouteBuilder AddTelegramUpdateEndpoint(this IEndpointRouteBuilder builder)
+    internal static IEndpointRouteBuilder AddTelegramUpdateHandlerEndpoint(this IEndpointRouteBuilder builder)
     {
         builder.MapPost($"/{Segment}", HandleAsync);
 

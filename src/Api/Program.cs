@@ -1,5 +1,5 @@
+using Api.Features.Telegram;
 using Api.Infrastructure;
-using Api.Infrastructure.Telegram;
 
 var builder = WebApplication
     .CreateBuilder(args)
@@ -9,6 +9,6 @@ var app = builder
     .Build()
     .ConfigurePipeline();
 
-await app.ConfigureTelegramWebhookAsync();
+await app.SetupTelegramAsync();
 
-app.Run();
+await app.RunAsync();
