@@ -18,6 +18,13 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "development": {
+      "commandName": "Executable",
+      "executablePath": "cmd.exe",
+      "commandLineArgs": "/c \"clo publish http 5265 && dotnet run -lp http\"",
+      "workingDirectory": "$(ProjectDir)",
+      "launchBrowser": false
     }
   }
 }
