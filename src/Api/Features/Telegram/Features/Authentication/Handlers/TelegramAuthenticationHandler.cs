@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Api.Features.Telegram.Features.Authentication.Constants;
+using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using System.Text.Json;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace Api.Features.Telegram.Features.Authentication.Handlers;
-
 internal sealed class TelegramAuthenticationHandler(JsonSerializerOptions jsonSerializerOptions) : IAuthenticationHandler
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions;
@@ -15,16 +15,9 @@ internal sealed class TelegramAuthenticationHandler(JsonSerializerOptions jsonSe
 
     public async Task<AuthenticateResult> AuthenticateAsync()
     {
-        if (Context.Request.ContentType != "application/json"
-            || !Context.Request.Path.StartsWithSegments($"/{UpdateHandler.Endpoint.Segment}"))
-        {
-            return AuthenticateResult.NoResult();
-        }
-
-        Context.Request.EnableBuffering();
-
         var update = await Context.Request.ReadFromJsonAsync<Update>(_jsonSerializerOptions);
-        Context.Request.Body.Seek(0, SeekOrigin.Begin);
+
+        Context.Items[HttpContextItemKeys.TelegramIncomingUpdate] = update;
 
         if (update == null)
         {

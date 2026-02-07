@@ -1,7 +1,9 @@
 ﻿using Api.Features.Telegram.Features.Authentication.Constants;
 using Api.Features.Telegram.Features.Authentication.Handlers;
 using Api.Features.Telegram.Features.Authentication.Middlewares;
+using Api.Features.Telegram.Features.Authentication.ModelBinderProviders;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Features.Telegram.Features.Authentication;
 

@@ -13,13 +13,13 @@ internal static class Statup
             .AddLogging()
             .AddTelegram();
 
-        builder.Services
-            .AddAuthentication();
-        builder.Services
-            .AddAuthorization();
+        AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressAutoDefaultScheme", true);
+        builder.Services.AddAuthentication();
+        builder.Services.AddAuthorization();
 
         builder.Services
             .AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
 
         return builder;
     }
@@ -31,10 +31,8 @@ internal static class Statup
             .UseTelegram();
 
         app.UseHttpsRedirection();
-
         app.UseAuthentication();
         app.UseAuthorization();
-
 
         return app;
     }

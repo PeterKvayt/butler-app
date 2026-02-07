@@ -1,4 +1,5 @@
 using Api.Features.Telegram.Features.Authentication;
+using Api.Features.Telegram.Features.Authorization;
 using Api.Features.Telegram.Features.Infrastructure;
 using Api.Features.Telegram.Features.MessageProcess;
 using Api.Features.Telegram.Features.UpdateHandler;
@@ -13,7 +14,8 @@ internal static class Composition
             .AddTelegramInfrastructure()
             .AddTelegramMessageProcess()
             .AddTelegramUpdateProcess()
-            .AddTelegramAuthentication();
+            .AddTelegramAuthentication()
+            .AddTelegramAuthorization();
         
         return builder;
     }
