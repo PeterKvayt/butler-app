@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/SolutionItems/">
     <File Path=".github/workflows/production_deployment.yml" />
+    <File Path="Readme.md" />
   </Folder>
   <Project Path="src/Api/Api.csproj" Id="2f5ae281-3a4f-44b8-98ce-1926777012e2" />
 </Solution>
