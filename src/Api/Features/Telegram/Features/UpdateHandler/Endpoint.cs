@@ -1,3 +1,6 @@
+using Api.Features.Telegram.Features.Authentication.Constants;
+using Api.Features.Telegram.Features.Authorization.Constants;
+using Api.Features.Telegram.Features.Security.EndpointFilters;
 using Api.Features.Telegram.Features.UpdateHandler.Services.UpdateHandler;
 using Telegram.Bot.Types;
 
@@ -9,13 +12,19 @@ internal static class Endpoint
 
     internal static IEndpointRouteBuilder AddTelegramUpdateHandlerEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost($"/{Segment}", HandleAsync);
+        builder.MapPost($"/{Segment}", HandleAsync)
+            .AddEndpointFilter<TelegramWebhookProtectionEndpointFilter>()
+            .RequireAuthorization(AuthorizationPolicies.TelegramWebhook);
 
         return builder;
     }
 
-    private static async Task HandleAsync(Update update, IUpdateHandlerService service)
+    private static async Task HandleAsync(
+        HttpContext context,
+        IUpdateHandlerService service)
     {
+        var update = (Update)context.Items[HttpContextItemKeys.TelegramIncomingUpdate];
+
         await service.HandleAsync(update);
     }
 }

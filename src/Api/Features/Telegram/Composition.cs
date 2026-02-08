@@ -1,3 +1,5 @@
+using Api.Features.Telegram.Features.Authentication;
+using Api.Features.Telegram.Features.Authorization;
 using Api.Features.Telegram.Features.Infrastructure;
 using Api.Features.Telegram.Features.MessageProcess;
 using Api.Features.Telegram.Features.UpdateHandler;
@@ -11,14 +13,17 @@ internal static class Composition
         builder
             .AddTelegramInfrastructure()
             .AddTelegramMessageProcess()
-            .AddTelegramUpdateProcess();
+            .AddTelegramUpdateProcess()
+            .AddTelegramAuthentication()
+            .AddTelegramAuthorization();
         
         return builder;
     }
 
     internal static WebApplication UseTelegram(this WebApplication app)
     {
-        app.UseTelegramUpdateProcess();
+        app
+            .UseTelegramUpdateProcess();
 
         return app;
     }

@@ -1,6 +1,7 @@
 using Api.Features.Ping;
 using Api.Features.Telegram;
 using Api.Infrastructure.Logging;
+using System.Text.Json;
 
 namespace Api.Infrastructure;
 
@@ -12,16 +13,26 @@ internal static class Statup
             .AddLogging()
             .AddTelegram();
 
+        AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressAutoDefaultScheme", true);
+        builder.Services.AddAuthentication();
+        builder.Services.AddAuthorization();
+
+        builder.Services
+            .AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+
         return builder;
     }
 
     internal static WebApplication ConfigurePipeline(this WebApplication app)
     {
-        app.UseHttpsRedirection();
-
         app
             .UsePing()
             .UseTelegram();
+
+        app.UseHttpsRedirection();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         return app;
     }
