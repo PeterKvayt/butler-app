@@ -15,7 +15,7 @@ internal sealed class TelegramUserIdAuthorizationHandler : AuthorizationHandler<
             return Task.CompletedTask;
         }
 
-        if (requirement.UserIds.Contains(userIdClaim.Value))
+        if (requirement.IsAllowedUser(userIdClaim))
         {
             context.Succeed(requirement);
         }
