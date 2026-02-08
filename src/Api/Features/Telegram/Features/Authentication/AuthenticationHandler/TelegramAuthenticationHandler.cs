@@ -2,13 +2,18 @@
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using System.Text.Json;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace Api.Features.Telegram.Features.Authentication.Handlers;
-internal sealed class TelegramAuthenticationHandler(JsonSerializerOptions jsonSerializerOptions) : IAuthenticationHandler
+namespace Api.Features.Telegram.Features.Authentication.AuthenticationHandler;
+internal sealed class TelegramAuthenticationHandler(
+    JsonSerializerOptions jsonSerializerOptions, 
+    ITelegramBotClient telegramBotClient) 
+    : IAuthenticationHandler
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions;
+    private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
 
     private HttpContext Context { get; set; } = default!;
     private AuthenticationScheme Scheme { get; set; } = default!;
@@ -40,14 +45,20 @@ internal sealed class TelegramAuthenticationHandler(JsonSerializerOptions jsonSe
 
     public Task ChallengeAsync(AuthenticationProperties? properties)
     {
-        Context.Response.StatusCode = 401;
+        Context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return Task.CompletedTask;
     }
 
-    public Task ForbidAsync(AuthenticationProperties? properties)
+    public async Task ForbidAsync(AuthenticationProperties? properties)
     {
-        Context.Response.StatusCode = 403;
-        return Task.CompletedTask;
+        Context.Response.StatusCode = StatusCodes.Status200OK;
+
+        if (Context.Items.TryGetValue(HttpContextItemKeys.TelegramIncomingUpdate, out var rawUpdate)
+            && rawUpdate is Update update && update.Message?.Chat != null)
+        {
+            await _telegramBotClient
+                .SendMessage(update.Message.Chat.Id, "Sorry, you don't have access to the bot");
+        }
     }
 
     public Task InitializeAsync(AuthenticationScheme scheme, HttpContext context)
@@ -91,18 +102,12 @@ internal sealed class TelegramAuthenticationHandler(JsonSerializerOptions jsonSe
     {
         var claims = new List<Claim>(4)
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString(), ClaimValueTypes.Integer64),
-            new(ClaimTypes.Name, user.FirstName, ClaimValueTypes.String),
+            new(TelegramClaims.Id, user.Id.ToString(), ClaimValueTypes.Integer64),
         };
 
         if (user.Username != null)
         {
-            claims.Add(new("TelegramUsername", user.Username, ClaimValueTypes.String));
-        }
-
-        if (user.LastName != null)
-        {
-            claims.Add(new(ClaimTypes.Surname, user.LastName, ClaimValueTypes.String));
+            claims.Add(new(TelegramClaims.Username, user.Username, ClaimValueTypes.String));
         }
 
         return claims;

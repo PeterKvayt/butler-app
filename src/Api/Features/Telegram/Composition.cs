@@ -23,7 +23,6 @@ internal static class Composition
     internal static WebApplication UseTelegram(this WebApplication app)
     {
         app
-            .UseTelegramAuthentication()
             .UseTelegramUpdateProcess();
 
         return app;

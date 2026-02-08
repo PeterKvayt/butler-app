@@ -1,9 +1,6 @@
-﻿using Api.Features.Telegram.Features.Authentication.Constants;
-using Api.Features.Telegram.Features.Authentication.Handlers;
-using Api.Features.Telegram.Features.Authentication.Middlewares;
-using Api.Features.Telegram.Features.Authentication.ModelBinderProviders;
+﻿using Api.Features.Telegram.Features.Authentication.AuthenticationHandler;
+using Api.Features.Telegram.Features.Authentication.Constants;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Features.Telegram.Features.Authentication;
 
@@ -13,18 +10,9 @@ internal static class Composition
     {
         var authBuilder = new AuthenticationBuilder(builder.Services);
 
-        authBuilder.AddScheme<AuthenticationSchemeOptions, TelegramAuthenticationHandler>(AuthenticationSchemas.TelegramWebhook);
-
-        builder.Services.AddSingleton<TelegramWebhookProtectionMiddleware>();
+        authBuilder.AddScheme<AuthenticationSchemeOptions, TelegramAuthenticationHandler>(AuthenticationSchemes.TelegramWebhook);
 
         return builder;
-    }
-
-    internal static WebApplication UseTelegramAuthentication(this WebApplication app)
-    {
-        app.UseMiddleware<TelegramWebhookProtectionMiddleware>();
-
-        return app;
     }
 }
 
