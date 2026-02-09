@@ -1,3 +1,6 @@
+using Api.Features.Telegram.Features.Infrastructure.Options;
+using Api.Infrastructure.Options;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
@@ -7,6 +10,8 @@ internal static class Composition
 {
     internal static WebApplicationBuilder AddTelegramInfrastructure(this WebApplicationBuilder builder)
     {
+        builder.Services.Configure<TelegramOptions>(builder.Configuration.GetSection("Telegram"));
+
         builder.AddTelegramBot();
         
         return builder;
@@ -21,28 +26,26 @@ internal static class Composition
 
     private static WebApplicationBuilder AddTelegramBot(this WebApplicationBuilder builder)
     {
-        var botToken = builder.Configuration.GetValue<string>("Telegram:BotToken")
-            ?? throw new InvalidOperationException("Telegram:BotToken is null");
-
-        builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+        builder.Services.AddSingleton<ITelegramBotClient>(factory =>
+        {
+            var options = factory.GetRequiredService<IOptions<TelegramOptions>>().Value;
+            return new TelegramBotClient(options.BotToken);
+        });
 
         return builder;
     }
 
     private static async Task SetupTelegramWebhookAsync(this WebApplication app)
     {
-        var webhookSecret = app.Configuration.GetValue<string>("Telegram:WebhookSecret")
-            ?? throw new InvalidOperationException("Telegram:WebhookSecret is null");
-        var baseUrl = app.Configuration.GetValue<string>("App:BaseUrl")
-            ?? throw new InvalidOperationException("App:BaseUrl is null");
-        var webhookUrl = $"{baseUrl}/{UpdateHandler.Endpoint.Segment}";
-
+        var telegramOptions = app.Services.GetRequiredService<IOptions<TelegramOptions>>().Value;
+        var appOptions = app.Services.GetRequiredService<IOptions<AppOptions>>().Value;
+        var webhookUrl = $"{appOptions.BaseUrl}/{UpdateHandler.Endpoint.Segment}";
         var client = app.Services.GetRequiredService<ITelegramBotClient>();
 
         await client.SetWebhook(webhookUrl, 
             allowedUpdates: [UpdateType.Message], 
             dropPendingUpdates: false,
-            secretToken: webhookSecret
+            secretToken: telegramOptions.WebhookSecret
         );
     }
 }

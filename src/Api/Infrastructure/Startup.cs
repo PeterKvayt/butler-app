@@ -1,6 +1,7 @@
 using Api.Features.Ping;
 using Api.Features.Telegram;
 using Api.Infrastructure.Logging;
+using Api.Infrastructure.Options;
 using System.Text.Json;
 
 namespace Api.Infrastructure;
@@ -12,6 +13,8 @@ internal static class Statup
         builder
             .AddLogging()
             .AddTelegram();
+
+        builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
 
         AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressAutoDefaultScheme", true);
         builder.Services.AddAuthentication();
