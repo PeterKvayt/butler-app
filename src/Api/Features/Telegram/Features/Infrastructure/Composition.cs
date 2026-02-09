@@ -1,4 +1,6 @@
 using Api.Features.Telegram.Features.Infrastructure.Extensions;
+using Api.Features.Telegram.Features.Infrastructure.Options;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
 namespace Api.Features.Telegram.Features.Infrastructure;
@@ -7,6 +9,8 @@ internal static class Composition
 {
     internal static WebApplicationBuilder AddTelegramInfrastructure(this WebApplicationBuilder builder)
     {
+        builder.Services.Configure<TelegramOptions>(builder.Configuration.GetSection("Telegram"));
+
         builder.AddTelegramBot();
         
         return builder;
@@ -22,10 +26,11 @@ internal static class Composition
 
     private static WebApplicationBuilder AddTelegramBot(this WebApplicationBuilder builder)
     {
-        var botToken = builder.Configuration.GetValue<string>("Telegram:BotToken")
-            ?? throw new InvalidOperationException("Telegram:BotToken is null");
-
-        builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+        builder.Services.AddSingleton<ITelegramBotClient>(factory =>
+        {
+            var options = factory.GetRequiredService<IOptions<TelegramOptions>>().Value;
+            return new TelegramBotClient(options.BotToken);
+        });
 
         return builder;
     }

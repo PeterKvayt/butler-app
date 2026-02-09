@@ -2,6 +2,7 @@
 using Api.Features.Telegram.Features.Authorization.AuthorizationHandlers;
 using Api.Features.Telegram.Features.Authorization.AuthorizationRequirements;
 using Api.Features.Telegram.Features.Authorization.Constants;
+using Api.Features.Telegram.Features.Infrastructure.Options;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Api.Features.Telegram.Features.Authorization;
@@ -17,17 +18,17 @@ internal static class Composition
             {
                 policy.AddAuthenticationSchemes(AuthenticationSchemes.TelegramWebhook);
                 policy.RequireAuthenticatedUser();
-                policy.Requirements.Add(CreateAllowedTelegramUserIdsAuthorizationRequirement(builder.Configuration));
+                policy.Requirements.Add(CreateRequirement(builder.Configuration));
             });
 
         return builder;
     }
 
-    private static AllowedTelegramUserIdsAuthorizationRequirement CreateAllowedTelegramUserIdsAuthorizationRequirement(IConfiguration configuration)
+    private static AllowedTelegramUserIdsAuthorizationRequirement CreateRequirement(IConfiguration configuration)
     {
-        var allowedUserIds = configuration.GetSection("Telegram:AllowedUserIds").Get<string[]>()
-            ?? throw new InvalidOperationException("Telegram:AllowedUserIds is null");
+        var telegramOptions = configuration.GetSection("Telegram").Get<TelegramOptions>()
+            ?? throw new InvalidOperationException($"{nameof(TelegramOptions)} is null");
 
-        return new AllowedTelegramUserIdsAuthorizationRequirement(new HashSet<string>(allowedUserIds));
+        return new AllowedTelegramUserIdsAuthorizationRequirement(telegramOptions.AllowedUserIds);
     }
 }
