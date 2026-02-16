@@ -1,8 +1,7 @@
-﻿
-using Api.Features.Telegram.Features.Infrastructure.Options;
+﻿using Api.Features.Telegram.Features.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 
-namespace Api.Features.Telegram.Features.Security.EndpointFilters;
+namespace Api.Features.Telegram.Features.UpdateHandler.EndpointFilters;
 
 internal sealed class TelegramWebhookProtectionEndpointFilter(IOptions<TelegramOptions> options) : IEndpointFilter
 {

@@ -1,17 +1,18 @@
 using Api.Features.Telegram.Features.UpdateHandler.Abstractions;
+using Api.Features.Telegram.Features.UpdateHandler.Services.TelegramUpdate;
 using System.Text.Json;
 using Telegram.Bot.Types;
 
 namespace Api.Features.Telegram.Features.UpdateHandler.Services.UpdateHandler;
 
-internal sealed partial class UpdateHandlerService(IEnumerable<ITelegramUpdateHandler> telegramUpdateHandlers,
-    ILogger<UpdateHandlerService> logger)
-    : IUpdateHandlerService
+internal sealed partial class TelegramUpdateService(IEnumerable<ITelegramUpdateHandler> telegramUpdateHandlers,
+    ILogger<TelegramUpdateService> logger)
+    : ITelegramUpdateService
 {
     private readonly IEnumerable<ITelegramUpdateHandler> _telegramUpdateHandlers = telegramUpdateHandlers;
-    private readonly ILogger<UpdateHandlerService> _logger = logger;
+    private readonly ILogger<TelegramUpdateService> _logger = logger;
 
-    public async Task HandleAsync(Update update)
+    public async Task ProcessUpdateAsync(Update update)
     {
         var handler = _telegramUpdateHandlers.FirstOrDefault(e => e.IsSupported(update));
 
@@ -24,6 +25,7 @@ internal sealed partial class UpdateHandlerService(IEnumerable<ITelegramUpdateHa
             return;
         }
 
+
         await handler.HandleAsync(update);
     }
 }
@@ -31,5 +33,5 @@ internal sealed partial class UpdateHandlerService(IEnumerable<ITelegramUpdateHa
 internal static partial class UpdateHandlerServiceLoggerExtensions
 {
     [LoggerMessage(LogLevel.Information, Message = "Unsupported update: {update}")]
-    internal static partial void LogUnsupportedUpdateType(this ILogger<UpdateHandlerService> logger, string update);
+    internal static partial void LogUnsupportedUpdateType(this ILogger<TelegramUpdateService> logger, string update);
 }

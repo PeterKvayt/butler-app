@@ -23,6 +23,8 @@ internal sealed class MessageHandlerService(ITelegramBotClient telegramBotClient
 
     private async Task SendMessageAsync(Message message)
     {
+        message.
+
         if (message.From.Id != 688133816)
         {
             await _telegramBotClient
