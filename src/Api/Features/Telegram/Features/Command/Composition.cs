@@ -15,7 +15,7 @@ internal static class Composition
     {
         builder.Services
             .AddCommand<CancelTelegramCommand, EmptyTelegramCommandArgsBuilder>(CommandNames.Cancel)
-            .AddCommand<NeedLoveTelegramCommand, EmptyTelegramCommandArgsBuilder>(CommandNames.NeedLove)
+            .AddCommand<NeedLoveTelegramCommand, NeedLoveTelegramCommandArgsBuilder>(CommandNames.NeedLove)
             ;
         
         builder.Services

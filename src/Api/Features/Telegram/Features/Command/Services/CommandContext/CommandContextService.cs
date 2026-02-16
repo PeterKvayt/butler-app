@@ -1,24 +1,31 @@
 ﻿using Api.Features.Telegram.Features.Command.Models;
-using System.Collections.Concurrent;
 
 namespace Api.Features.Telegram.Features.Command.Services.CommandContext;
 
-internal sealed class CommandContextService(ILogger<CommandContextService> logger) : ICommandContextService
+internal sealed class CommandContextService : ICommandContextService
 {
-    private readonly ILogger<CommandContextService> _logger = logger;
-    private static readonly ConcurrentDictionary<long, CommandContextModel> _contexts = new();
+    private static readonly Dictionary<long, CommandContextModel> _contexts = [];
 
-    public CommandContextModel GetOrAddContext(long userId, Func<long, CommandContextModel> contextFactory)
+    private readonly ILogger<CommandContextService> _logger;
+
+    public CommandContextService(ILogger<CommandContextService> logger)
     {
-        return _contexts.GetOrAdd(userId, (userId) =>
-        {
-            return contextFactory(userId);
-        });
+        _logger = logger;
+    }
+
+    public CommandContextModel? GetContext(long userId)
+    {
+        return _contexts.GetValueOrDefault(userId);
+    }
+
+    public void AddContext(long userId, CommandContextModel context)
+    {
+        _contexts.Add(userId, context);
     }
 
     public void RemoveContext(long userId)
     {
-        if (_contexts.TryRemove(userId, out var _))
+        if (_contexts.Remove(userId))
         {
             // TODO: improve logging
             _logger.LogWarning("CommandContextModel has not been removed for {UserId}", userId);

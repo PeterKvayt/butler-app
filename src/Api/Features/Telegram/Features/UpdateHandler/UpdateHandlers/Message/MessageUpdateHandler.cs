@@ -1,4 +1,5 @@
 ﻿using Api.Features.Telegram.Features.Authentication.Extensions;
+using Api.Features.Telegram.Features.Command.Abstractions;
 using Api.Features.Telegram.Features.Command.Models;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommand;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsBuilder;
@@ -36,30 +37,33 @@ internal sealed class MessageUpdateHandler(
             throw new InvalidOperationException("Message is null");
         }
 
-        var commandName = ConvertToCommandName(update.Message.Text);
-
-        if (string.IsNullOrWhiteSpace(commandName))
-        {
-            return;
-        }
-
-        var isCommand = _commandNames.Contains(commandName);
-
-        if (!isCommand)
-        {
-            return;
-        }
-
-        await ProcessCommandAsync(commandName);
-    }
-
-    private async Task ProcessCommandAsync(string commandName)
-    {
         var userId = _httpContextAccessor.GetTelegramUserId();
-        var argumentsBuilder = _builderProvider.GetBuilder(commandName);
-        var currentContext = _commandContextService.GetOrAddContext(userId, (userId) => new CommandContextModel(argumentsBuilder.Arguments));
 
-        argumentsBuilder.Arguments = currentContext.CommandArgs;
+        var commandContext = _commandContextService.GetContext(userId);
+        ITelegramCommandArgsBuilder argumentsBuilder;
+
+        if (commandContext == null)
+        {
+            var commandName = ConvertToCommandName(update.Message.Text);
+            
+            var isCommand = _commandNames.Contains(commandName);
+            if (!isCommand)
+            {
+                return;
+            }
+
+            argumentsBuilder = _builderProvider.GetBuilder(commandName);
+            argumentsBuilder.AddAgrument(update.Message);
+            commandContext = new CommandContextModel(argumentsBuilder.Arguments, commandName);
+            _commandContextService.AddContext(userId, commandContext);
+        }
+        else
+        {
+            argumentsBuilder = _builderProvider.GetBuilder(commandContext.CommandName);
+            argumentsBuilder.Arguments = commandContext.CommandArgs;
+            argumentsBuilder.AddAgrument(update.Message);
+            commandContext.CommandArgs = argumentsBuilder.Arguments;
+        }
 
         if (!argumentsBuilder.IsArgumentsFilledIn())
         {
@@ -67,8 +71,8 @@ internal sealed class MessageUpdateHandler(
             return;
         }
 
-        var command = _telegramCommandProvider.GetCommand(commandName);
-        await command.ExecuteAsync(argumentsBuilder.Arguments);
+        var command = _telegramCommandProvider.GetCommand(commandContext.CommandName);
+        await command.ExecuteAsync(commandContext.CommandArgs);
 
         _commandContextService.RemoveContext(userId);
     }

@@ -2,7 +2,8 @@
 
 namespace Api.Features.Telegram.Features.Command.Models;
 
-internal sealed record CommandContextModel(ITelegramCommandArgs commandArgs)
+internal sealed record CommandContextModel(ITelegramCommandArgs commandArgs, string commandName)
 {
-    internal ITelegramCommandArgs CommandArgs { get; init; } = commandArgs;
+    internal string CommandName { get; } = commandName;
+    internal ITelegramCommandArgs CommandArgs { get; set; } = commandArgs;
 }
