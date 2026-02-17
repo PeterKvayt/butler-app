@@ -21,7 +21,8 @@ internal static class Composition
         builder.Services
             .AddScoped<ITelegramCommandProvider, TelegramCommandProvider>()
             .AddScoped<ITelegramCommandArgsBuilderProvider, TelegramCommandArgsBuilderProvider>()
-            .AddScoped<ICommandContextService, CommandContextService>();
+            .AddScoped<ICommandContextService, CommandContextService>()
+            .AddCommandInfoProvider();
         
         return builder;
     }

@@ -2,5 +2,5 @@
 
 internal static partial class CommandNames
 {
-    internal const string NeedLove = "need-love";
+    internal const string NeedLove = "need_love";
 }

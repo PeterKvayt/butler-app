@@ -1,4 +1,4 @@
-﻿using Api.Features.Telegram.Features.Command.Abstractions;
+﻿using Api.Features.Telegram.Features.Command.Providers.TelegramCommandInfo;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -10,14 +10,9 @@ internal static class TelegramCommands
 
     internal static async Task SetupTelegramCommandsAsync(this WebApplication app)
     {
-        var commands = app.Services.GetRequiredService<IEnumerable<ITelegramCommand>>();
-
+        var commandInfosProvider = app.Services.GetRequiredService<ITelegramCommandInfoProvider>();
+        var botCommands = commandInfosProvider.CommandInfos.Select(e => new BotCommand(e.Name, e.Description));
         var client = app.Services.GetRequiredService<ITelegramBotClient>();
-
-        var commands = new List<BotCommand>
-        {
-        };
-
-        await client.SetMyCommands(commands);
+        await client.SetMyCommands(botCommands);
     }
 }

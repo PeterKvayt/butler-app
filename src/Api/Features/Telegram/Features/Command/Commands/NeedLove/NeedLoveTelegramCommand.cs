@@ -1,4 +1,6 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Commands.Constants;
 using Telegram.Bot;
 
 namespace Api.Features.Telegram.Features.Command.Commands.NeedLove;
@@ -7,6 +9,12 @@ internal sealed class NeedLoveTelegramCommand(ITelegramBotClient telegramBotClie
 {
     private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
 
+    public CommandInfo CommandInfo { get; } = new CommandInfo
+    {
+        Name = CommandNames.NeedLove,
+        Description = "Scpecial command just for the Lapochka"
+    };
+
     public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
     {
         if (commandArgs is not NeedLoveTelegramCommandArgs args)
@@ -14,7 +22,7 @@ internal sealed class NeedLoveTelegramCommand(ITelegramBotClient telegramBotClie
             throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
         }
 
-        await _telegramBotClient.SendMessage(args.ChatId, $"Dear Lapochka, {GetRandomCompliment()}");
+        await _telegramBotClient.SendMessage(args.GetChatId(), $"Dear Lapochka, {GetRandomCompliment()}");
     }
 
     private static readonly string[] Compliments =
