@@ -21,6 +21,7 @@ internal static class Statup
         builder.Services.AddAuthorization();
 
         builder.Services
+            .AddHttpContextAccessor()
             .AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
 

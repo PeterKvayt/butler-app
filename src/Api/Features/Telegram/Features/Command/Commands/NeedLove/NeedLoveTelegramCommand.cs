@@ -1,38 +1,28 @@
-﻿using Api.Features.Telegram.Features.UpdateHandler.Abstractions;
+﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Commands.Constants;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
-namespace Api.Features.Telegram.Features.MessageProcess.Services.MessageHandle;
+namespace Api.Features.Telegram.Features.Command.Commands.NeedLove;
 
-internal sealed class MessageHandlerService(ITelegramBotClient telegramBotClient) : ITelegramUpdateHandler
+internal sealed class NeedLoveTelegramCommand(ITelegramBotClient telegramBotClient) : ITelegramCommand
 {
     private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
 
-    public async ValueTask HandleAsync(Update update)
+    public CommandInfo CommandInfo { get; } = new CommandInfo
     {
-        if (update.Message == null)
+        Name = CommandNames.NeedLove,
+        Description = "Scpecial command just for the Lapochka"
+    };
+
+    public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
+    {
+        if (commandArgs is not NeedLoveTelegramCommandArgs args)
         {
-            throw new InvalidOperationException("Message is null");
+            throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
         }
 
-        await SendMessageAsync(update.Message);
-    }
-
-    public bool IsSupported(Update update) => update.Type == UpdateType.Message;
-
-    private async Task SendMessageAsync(Message message)
-    {
-        if (message.From.Id != 688133816)
-        {
-            await _telegramBotClient
-                .SendMessage(message.Chat.Id, $"Message received! Nice work {message.From?.FirstName}");
-
-            return;
-        }
-
-        await _telegramBotClient
-                .SendMessage(message.Chat.Id, $"Dear Lapochka, {GetRandomCompliment()}");
+        await _telegramBotClient.SendMessage(args.GetChatId(), $"Dear Lapochka, {GetRandomCompliment()}");
     }
 
     private static readonly string[] Compliments =
