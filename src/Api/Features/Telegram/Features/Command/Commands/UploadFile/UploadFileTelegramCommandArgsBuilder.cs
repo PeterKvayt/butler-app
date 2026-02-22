@@ -1,4 +1,7 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Infrastructure.FileSystem.Abstractions;
+using Api.Infrastructure.FileSystem.Extensions;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace Api.Features.Telegram.Features.Command.Commands.UploadFile;
@@ -6,7 +9,7 @@ namespace Api.Features.Telegram.Features.Command.Commands.UploadFile;
 internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
     private readonly ITelegramBotClient _telegramBotClient;
-    private readonly IFileSystemService _fileSystemservice;
+    private readonly IFileSystemService _fileSystemService;
 
     private UploadFileTelegramCommandArgs _args = new();
 
@@ -25,30 +28,36 @@ internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArg
         }
     }
     
-    internal UploadFileTelegramCommandArgsBuilder(ITelegramBotClient telegramBotClient, IFileSystemService fileSystemservice)
+    public UploadFileTelegramCommandArgsBuilder(ITelegramBotClient telegramBotClient, IFileSystemService fileSystemservice)
     {
         _telegramBotClient = telegramBotClient;
-        _fileSystemservice = fileSystemservice;
+        _fileSystemService = fileSystemservice;
     }
 
-    public void AddAgrument(Message message)
+    public async ValueTask AddAgrumentAsync(Message message)
     {
         if (!_args.ChatId.HasValue)
         {
             _args.ChatId = message.Chat.Id;
         }
 
-        if (string.IsNullEmptyOrWhitespace(_args.TempFilePath))
+        if (string.IsNullOrWhiteSpace(_args.TempFilePath))
         {
-            if () // if message does not have a photo
+            var fileId = message.Photo?.LastOrDefault()?.FileId // TODO: add extension to get the highest quality photo
+                ?? message.Document?.FileId; 
+            if (string.IsNullOrWhiteSpace(fileId)) // if message does not have a photo
             {
                 _nextArgMessage = "Upload the photo";
                 return;
             }
 
-            _fileSystemservice.SaveFileAsync()
-            // save photo 
-            // set path to args
+            var fileInfo = await _telegramBotClient.GetFile(fileId);
+            using var fileStream = new MemoryStream((int)fileInfo.FileSize);
+            await _telegramBotClient.DownloadFile(fileInfo.FilePath, fileStream);
+            var relativeFilePath = $"{message.Chat.Id}/{fileInfo.FileUniqueId}{Path.GetExtension(fileInfo.FilePath)}";
+            await _fileSystemService.SaveFileAsync(fileStream, relativeFilePath);
+
+            _args.TempFilePath = relativeFilePath;
         }
     }
 
@@ -56,6 +65,6 @@ internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArg
 
     public bool IsArgumentsFilledIn()
     {
-        return _args.ChatId.HasValue && !_string.IsNullEmptyOrWhitespace(_args.TempFilePath);
+        return _args.ChatId.HasValue && !string.IsNullOrWhiteSpace(_args.TempFilePath);
     }
 }

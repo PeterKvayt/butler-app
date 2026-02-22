@@ -5,9 +5,14 @@ using Telegram.Bot;
 
 namespace Api.Features.Telegram.Features.Command.Commands.UploadFile;
 
-internal sealed class UploadFileTelegramCommand(ITelegramBotClient telegramBotClient) : ITelegramCommand
+internal sealed class UploadFileTelegramCommand : ITelegramCommand
 {
-    private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
+    private readonly ITelegramBotClient _telegramBotClient;
+
+    public UploadFileTelegramCommand(ITelegramBotClient telegramBotClient)
+    {
+        _telegramBotClient = telegramBotClient;
+    }
 
     public CommandInfo CommandInfo { get; } = new CommandInfo
     {

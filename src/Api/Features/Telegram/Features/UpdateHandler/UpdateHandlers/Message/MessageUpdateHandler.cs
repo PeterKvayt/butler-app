@@ -58,7 +58,7 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
             }
 
             argumentsBuilder = _builderProvider.GetBuilder(commandName);
-            argumentsBuilder.AddAgrument(update.Message);
+            argumentsBuilder.AddAgrumentAsync(update.Message);
             commandContext = new CommandContextModel(argumentsBuilder.Arguments, commandName);
             _commandContextService.AddContext(userId, commandContext);
         }
@@ -66,7 +66,7 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
         {
             argumentsBuilder = _builderProvider.GetBuilder(commandContext.CommandName);
             argumentsBuilder.Arguments = commandContext.CommandArgs;
-            argumentsBuilder.AddAgrument(update.Message);
+            argumentsBuilder.AddAgrumentAsync(update.Message);
             commandContext.CommandArgs = argumentsBuilder.Arguments;
         }
 

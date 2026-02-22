@@ -1,5 +1,6 @@
 using Api.Features.Ping;
 using Api.Features.Telegram;
+using Api.Infrastructure.FileSystem;
 using Api.Infrastructure.Logging;
 using Api.Infrastructure.Options;
 using System.Text.Json;
@@ -12,7 +13,8 @@ internal static class Statup
     {
         builder
             .AddLogging()
-            .AddTelegram();
+            .AddTelegram()
+            .AddLFileSystem();
 
         builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
 

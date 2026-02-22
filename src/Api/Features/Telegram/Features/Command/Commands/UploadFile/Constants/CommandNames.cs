@@ -2,5 +2,5 @@
 
 internal static partial class CommandNames
 {
-    internal const string NeedLove = "upload_file";
+    internal const string UploadFile = "upload_file";
 }

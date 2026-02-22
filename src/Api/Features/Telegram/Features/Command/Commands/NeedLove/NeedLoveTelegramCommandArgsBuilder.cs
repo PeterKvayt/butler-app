@@ -20,9 +20,11 @@ internal sealed class NeedLoveTelegramCommandArgsBuilder : ITelegramCommandArgsB
         }
     }
     
-    public void AddAgrument(Message message)
+    public ValueTask AddAgrumentAsync(Message message)
     {
         _args.ChatId = message.Chat.Id;
+
+        return ValueTask.CompletedTask;
     }
 
     public Task RequestNextAgrumentAsync() => Task.CompletedTask;
