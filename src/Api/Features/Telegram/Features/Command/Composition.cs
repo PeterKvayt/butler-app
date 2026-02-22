@@ -1,5 +1,6 @@
 ﻿using Api.Features.Telegram.Features.Command.Commands.Cancel;
 using Api.Features.Telegram.Features.Command.Commands.NeedLove;
+using Api.Features.Telegram.Features.Command.Commands.UploadFile;
 using Api.Features.Telegram.Features.Command.Commands.Shared.CommandBuilders;
 using Api.Features.Telegram.Features.Command.Extensions;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommand;
@@ -16,6 +17,7 @@ internal static class Composition
         builder.Services
             .AddCommand<CancelTelegramCommand, EmptyTelegramCommandArgsBuilder>(CommandNames.Cancel)
             .AddCommand<NeedLoveTelegramCommand, NeedLoveTelegramCommandArgsBuilder>(CommandNames.NeedLove)
+            .AddCommand<UploadFileTelegramCommand, UploadFileTelegramCommandArgsBuilder>(CommandNames.UploadFile)
             ;
         
         builder.Services
