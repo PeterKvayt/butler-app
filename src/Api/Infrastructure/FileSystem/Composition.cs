@@ -1,6 +1,6 @@
 
-using Api.Infrastructure.FileSystem.Abstractions;
-using Api.Infrastructure.FileSystem.Services.LocalFileSystem;
+using Api.Infrastructure.FileSystem.Features.Local.Extensions;
+using Api.Infrastructure.FileSystem.Features.YandexDisk.Extensions;
 
 namespace Api.Infrastructure.FileSystem;
 
@@ -8,8 +8,9 @@ internal static class Composition
 {
     internal static WebApplicationBuilder AddLFileSystem(this WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IFileSystemService, LocalFileSystemService>();
-        
+        builder.Services.AddLocalFileSystem();
+        builder.Services.AddYandexDiskFileSystem(builder.Configuration);
+
         return builder;
     }
 }

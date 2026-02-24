@@ -1,6 +1,5 @@
 namespace Api.Infrastructure.FileSystem.Abstractions;
 
-internal interface IFileSystemService
+internal interface IFileSystemService : IFileSave
 {
-    internal Task SaveFileAsync(IReadOnlyCollection<byte> payload, string relativePath);
 }

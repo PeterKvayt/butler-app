@@ -1,15 +1,15 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
 using Api.Infrastructure.FileSystem.Abstractions;
-using Api.Infrastructure.FileSystem.Extensions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Api.Features.Telegram.Features.Command.Commands.UploadFile;
 
 internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
     private readonly ITelegramBotClient _telegramBotClient;
-    private readonly IFileSystemService _fileSystemService;
+    private readonly IFileBufferService _fileBufferService;
 
     private UploadFileTelegramCommandArgs _args = new();
 
@@ -28,10 +28,10 @@ internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArg
         }
     }
     
-    public UploadFileTelegramCommandArgsBuilder(ITelegramBotClient telegramBotClient, IFileSystemService fileSystemservice)
+    public UploadFileTelegramCommandArgsBuilder(ITelegramBotClient telegramBotClient, IFileBufferService fileSBufferService)
     {
         _telegramBotClient = telegramBotClient;
-        _fileSystemService = fileSystemservice;
+        _fileBufferService = fileSBufferService;
     }
 
     public async ValueTask AddAgrumentAsync(Message message)
@@ -43,8 +43,7 @@ internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArg
 
         if (string.IsNullOrWhiteSpace(_args.TempFilePath))
         {
-            var fileId = message.Photo?.LastOrDefault()?.FileId // TODO: add extension to get the highest quality photo
-                ?? message.Document?.FileId; 
+            var fileId = GeFileId(message);
             if (string.IsNullOrWhiteSpace(fileId)) // if message does not have a photo
             {
                 _nextArgMessage = "Upload the photo";
@@ -52,13 +51,24 @@ internal sealed class UploadFileTelegramCommandArgsBuilder : ITelegramCommandArg
             }
 
             var fileInfo = await _telegramBotClient.GetFile(fileId);
-            using var fileStream = new MemoryStream((int)fileInfo.FileSize);
+            using var fileStream = new MemoryStream();
             await _telegramBotClient.DownloadFile(fileInfo.FilePath, fileStream);
+            fileStream.Seek(0, SeekOrigin.Begin);
             var relativeFilePath = $"{message.Chat.Id}/{fileInfo.FileUniqueId}{Path.GetExtension(fileInfo.FilePath)}";
-            await _fileSystemService.SaveFileAsync(fileStream, relativeFilePath);
+            await _fileBufferService.SaveFileAsync(fileStream, relativeFilePath);
 
             _args.TempFilePath = relativeFilePath;
         }
+    }
+
+    private static string? GeFileId(Message message)
+    {
+        return message.Type switch
+        {
+            MessageType.Photo => message.Photo?.LastOrDefault()?.FileId, // TODO: add extension to get the highest quality photo
+            MessageType.Document => message.Document?.FileId,
+            _ => null
+        };
     }
 
     public Task RequestNextAgrumentAsync() => _telegramBotClient.SendMessage(_args.GetChatId(), _nextArgMessage);
