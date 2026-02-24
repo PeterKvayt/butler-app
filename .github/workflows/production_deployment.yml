@@ -20,6 +20,7 @@ jobs:
         key-value-pairs: |
           Telegram.BotToken=${{ secrets.TELEGRAM_BOT_TOKEN }}
           Telegram.WebhookSecret=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          Yandex.Disk.AccessToken=${{ secrets.YANDEX_DISK_ACCESS_TOKEN }}
           App.BaseUrl=https://${{ vars.SERVER_DOMAIN_NAME }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v1

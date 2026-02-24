@@ -15,6 +15,8 @@ internal static class Endpoint
     {
         logger.LogInformation("Ping triggered");
 
+
+
         return Results.Ok("Pong");
     }
 }
