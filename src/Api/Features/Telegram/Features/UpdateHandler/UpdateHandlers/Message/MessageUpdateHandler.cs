@@ -58,15 +58,17 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
             }
 
             argumentsBuilder = _builderProvider.GetBuilder(commandName);
-            argumentsBuilder.AddAgrumentAsync(update.Message);
+            await argumentsBuilder.AddAgrumentAsync(update.Message);
             commandContext = new CommandContextModel(argumentsBuilder.Arguments, commandName);
             _commandContextService.AddContext(userId, commandContext);
         }
         else
         {
+            // TODO: fix cancell command
+
             argumentsBuilder = _builderProvider.GetBuilder(commandContext.CommandName);
             argumentsBuilder.Arguments = commandContext.CommandArgs;
-            argumentsBuilder.AddAgrumentAsync(update.Message);
+            await argumentsBuilder.AddAgrumentAsync(update.Message);
             commandContext.CommandArgs = argumentsBuilder.Arguments;
         }
 

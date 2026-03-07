@@ -2,5 +2,5 @@
 
 internal static partial class CommandNames
 {
-    internal const string UploadFile = "upload_file";
+    internal const string SnapshotUtilityServices = "snapshot_utility_services";
 }

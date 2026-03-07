@@ -1,12 +1,13 @@
 ﻿using Api.Features.Telegram.Features.Command.Commands.Cancel;
 using Api.Features.Telegram.Features.Command.Commands.NeedLove;
-using Api.Features.Telegram.Features.Command.Commands.UploadFile;
 using Api.Features.Telegram.Features.Command.Commands.Shared.CommandBuilders;
 using Api.Features.Telegram.Features.Command.Extensions;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommand;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsBuilder;
 using Api.Features.Telegram.Features.Command.Services.CommandContext;
 using Api.Features.Telegram.Features.Commands.Constants;
+using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Api.Features.Telegram.Features.Command;
 
@@ -17,7 +18,7 @@ internal static class Composition
         builder.Services
             .AddCommand<CancelTelegramCommand, EmptyTelegramCommandArgsBuilder>(CommandNames.Cancel)
             .AddCommand<NeedLoveTelegramCommand, NeedLoveTelegramCommandArgsBuilder>(CommandNames.NeedLove)
-            .AddCommand<UploadFileTelegramCommand, UploadFileTelegramCommandArgsBuilder>(CommandNames.UploadFile)
+            .AddCommand<SnapshotUtilityServicesTelegramCommand, SnapshotUtilityServicesTelegramCommandArgsBuilder>(CommandNames.SnapshotUtilityServices)
             ;
         
         builder.Services
@@ -25,7 +26,9 @@ internal static class Composition
             .AddScoped<ITelegramCommandArgsBuilderProvider, TelegramCommandArgsBuilderProvider>()
             .AddScoped<ICommandContextService, CommandContextService>()
             .AddCommandInfoProvider();
-        
+
+        builder.Services.TryAddSingleton(TimeProvider.System);
+
         return builder;
     }
 }

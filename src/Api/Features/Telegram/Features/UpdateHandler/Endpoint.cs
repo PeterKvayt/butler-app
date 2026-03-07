@@ -19,12 +19,14 @@ internal static class Endpoint
         return builder;
     }
 
-    private static async Task HandleAsync(
+    private static async Task<IResult> HandleAsync(
         HttpContext context,
         ITelegramUpdateService service)
     {
         var update = (Update)context.Items[HttpContextItemKeys.TelegramIncomingUpdate];
 
         await service.ProcessUpdateAsync(update);
+
+        return Results.Ok();
     }
 }
