@@ -19,6 +19,18 @@ internal static class IServiceCollectionExtensions
         return services;
     }
 
+    internal static IServiceCollection AddCommand<TCommand, TCommandArgsBuilder, TCommandArgsDestroyer>(this IServiceCollection services, string commandName)
+        where TCommand : class, ITelegramCommand
+        where TCommandArgsBuilder : class, ITelegramCommandArgsBuilder
+        where TCommandArgsDestroyer : class, ITelegramCommandArgsDestroyer
+    {
+        services.AddCommand<TCommand, TCommandArgsBuilder>(commandName);
+
+        services.AddKeyedScoped<ITelegramCommandArgsDestroyer, TCommandArgsDestroyer>(TelegramCommandArgsDestroyerKeyHelper.CreateKey(commandName));
+
+        return services;
+    }
+
     internal static IServiceCollection AddCommandInfoProvider(this IServiceCollection services)
     {
         services.AddSingleton<ITelegramCommandInfoProvider>(serviceProvider =>
