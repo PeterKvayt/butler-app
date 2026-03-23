@@ -6,5 +6,5 @@ internal interface ICommandContextService
 {
     internal void AddContext(long userId, CommandContextModel context);
     internal CommandContextModel? GetContext(long userId);
-    internal void RemoveContext(long userId);
+    internal ValueTask RemoveContextAsync(long userId);
 }

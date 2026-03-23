@@ -50,6 +50,7 @@ internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
             ProcessFileAsync(args.GetUtilityServicesBillFilePath(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
             ProcessFileAsync(args.GetCommunityServicesBillFilePath(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
         );
+
         await _telegramBotClient.SendMessage(args.GetChatId(), "Utility services saved to disk");
     }
 
@@ -61,7 +62,5 @@ internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
         using var file = await _fileBufferService.GetFileAsync(bufferFilePath);
 
         await _fileSystemService.SaveFileAsync(file, targetPathWithExtension);
-
-        await _fileBufferService.DeleteFileAsync(bufferFilePath);
     }
 }

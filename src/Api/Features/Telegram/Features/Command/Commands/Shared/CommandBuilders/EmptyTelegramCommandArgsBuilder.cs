@@ -10,10 +10,7 @@ internal sealed class EmptyTelegramCommandArgsBuilder : ITelegramCommandArgsBuil
 
     public ITelegramCommandArgs Arguments { get; set; } = _args;
 
-    public ValueTask AddAgrumentAsync(Message message)
-    {
-        return ValueTask.CompletedTask;
-    }
+    public ValueTask AddAgrumentAsync(Message message) => ValueTask.CompletedTask;
 
     public Task RequestNextAgrumentAsync() => Task.CompletedTask;
 

@@ -1,4 +1,5 @@
 ﻿using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsDestroyer;
 
 namespace Api.Features.Telegram.Features.Command.Services.CommandContext;
 
@@ -6,11 +7,13 @@ internal sealed class CommandContextService : ICommandContextService
 {
     private static readonly Dictionary<long, CommandContextModel> _contexts = [];
 
-    private readonly ILogger<CommandContextService> _logger;
+    private readonly ITelegramCommandArgsDestroyerProvider _telegramCommandArgsDestroyerProvider;
 
-    public CommandContextService(ILogger<CommandContextService> logger)
+    public CommandContextService(
+        ITelegramCommandArgsDestroyerProvider telegramCommandArgsDestroyerProvider
+    )
     {
-        _logger = logger;
+        _telegramCommandArgsDestroyerProvider = telegramCommandArgsDestroyerProvider;
     }
 
     public CommandContextModel? GetContext(long userId)
@@ -23,12 +26,24 @@ internal sealed class CommandContextService : ICommandContextService
         _contexts.Add(userId, context);
     }
 
-    public void RemoveContext(long userId)
+    public async ValueTask RemoveContextAsync(long userId)
     {
-        if (_contexts.Remove(userId))
+        var context = GetContext(userId);
+
+        if (context == null)
         {
-            // TODO: improve logging
-            _logger.LogWarning("CommandContextModel has not been removed for {UserId}", userId);
+            return;
         }
+        
+        _contexts.Remove(userId);
+
+        var argumentsDestroyer = _telegramCommandArgsDestroyerProvider.GetDestroyer(context.CommandName);
+
+        if (argumentsDestroyer == null)
+        {
+            return;
+        }
+
+        await argumentsDestroyer.DestroyAsync(context.CommandArgs);
     }
 }
