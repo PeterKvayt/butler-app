@@ -7,6 +7,7 @@ using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsBuilde
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandInfo;
 using Api.Features.Telegram.Features.Command.Services.CommandContext;
 using Api.Features.Telegram.Features.UpdateHandler.Abstractions;
+using Api.Features.Telegram.Features.UpdateHandler.Extensions;
 using System.Diagnostics.CodeAnalysis;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -39,27 +40,30 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
 
     public async ValueTask HandleAsync(Update update)
     {
-        if (update.Message == null)
+        var message = update.Message;
+
+        if (message == null)
         {
             throw new InvalidOperationException("Message is null");
         }
 
-        var commandName = ConvertToCommandName(update.Message.Text);
-        
         var userId = _httpContextAccessor.GetTelegramUserId();
+
         var commandContext = _commandContextService.GetContext(userId);
-        
+
+        var commandName = message.GetCommandName(_telegramCommandInfoProvider);
+
         ITelegramCommandArgsBuilder argumentsBuilder;
 
         if (commandContext == null)
         {
-            if (!IsCommand(commandName))
+            if (commandName == null)
             {
                 return;
             }
 
             argumentsBuilder = _builderProvider.GetBuilder(commandName);
-            await argumentsBuilder.AddAgrumentAsync(update.Message);
+            await argumentsBuilder.AddAgrumentAsync(message);
             commandContext = new CommandContextModel(argumentsBuilder.Arguments, commandName);
 
             _commandContextService.AddContext(userId, commandContext);
@@ -69,13 +73,13 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
             if (IsCancelCommand(commandName))
             {
                 argumentsBuilder = _builderProvider.GetBuilder(commandName);
-                await argumentsBuilder.AddAgrumentAsync(update.Message);
+                await argumentsBuilder.AddAgrumentAsync(message);
                 commandContext = new CommandContextModel(argumentsBuilder.Arguments, commandName);
             }
             else
             {
                 argumentsBuilder = _builderProvider.GetBuilder(commandContext);
-                await argumentsBuilder.AddAgrumentAsync(update.Message);
+                await argumentsBuilder.AddAgrumentAsync(message);
                 commandContext.CommandArgs = argumentsBuilder.Arguments;
             }
         }
@@ -90,16 +94,6 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
         await command.ExecuteAsync(commandContext.CommandArgs);
 
         await _commandContextService.RemoveContextAsync(userId);
-    }
-
-    private static string? ConvertToCommandName(string? messageText)
-    {
-        return messageText?.TrimStart('/');
-    }
-
-    private bool IsCommand([NotNullWhen(true)] string? commandName)
-    {
-        return _telegramCommandInfoProvider.CommandInfos.Select(e => e.Name).Contains(commandName);
     }
 
     private bool IsCancelCommand([NotNullWhen(true)] string? commandName)
