@@ -7,7 +7,6 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsDestroyer : ITel
 {
     private readonly IFileBufferService _fileBufferService;
 
-    private SnapshotUtilityServicesTelegramCommandArgs _args = new();
     public SnapshotUtilityServicesTelegramCommandArgsDestroyer(IFileBufferService fileSBufferService)
     {
         _fileBufferService = fileSBufferService;
