@@ -34,7 +34,7 @@ jobs:
         --runtime win-x86
     - name: Build
       run: | 
-        dotnet build \
+        dotnet build src/Api/Api.csproj \
         --no-restore \
         --configuration Release \
         --runtime win-x86
