@@ -35,7 +35,7 @@ jobs:
     - name: Build
       run: | 
         dotnet build \
-        --no-restore 
+        --no-restore \
         --configuration Release \
         --runtime win-x86
     - name: Publish
