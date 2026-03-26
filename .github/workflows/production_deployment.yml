@@ -29,15 +29,18 @@ jobs:
     - name: Dotnet info
       run: dotnet --info
     - name: Restore
-      run: dotnet restore \
+      run: |
+        dotnet restore \
         --runtime win-x86
     - name: Build
-      run: dotnet build \
+      run: | 
+        dotnet build \
         --no-restore 
         --configuration Release \
         --runtime win-x86
     - name: Publish
-      run: dotnet publish src/Api/Api.csproj \
+      run: |
+        dotnet publish src/Api/Api.csproj \
         --output src/Api/bin/publish \
         --configuration Release \
         --verbosity normal \
