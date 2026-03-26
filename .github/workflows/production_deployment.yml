@@ -35,16 +35,14 @@ jobs:
       run: | 
         dotnet build src/Api/Api.csproj \
         --no-restore \
-        --configuration Release \
+        --configuration Release
     - name: Publish
       run: |
         dotnet publish src/Api/Api.csproj \
         --output src/Api/bin/publish \
         --configuration Release \
         --verbosity normal \
-        --no-build \
-        --property:DebugType=None \
-        --property:DebugSymbols=false
+        --no-build
     - name: Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
