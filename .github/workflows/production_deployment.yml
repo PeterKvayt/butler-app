@@ -29,12 +29,23 @@ jobs:
     - name: Dotnet info
       run: dotnet --info
     - name: Restore
-      run: dotnet restore
+      run: dotnet restore \
+        --runtime win-x86 \
     - name: Build
-      run: dotnet build --no-restore -c Release
+      run: dotnet build \
+        --no-restore 
+        --configuration Release \
+        --runtime win-x86 
     - name: Publish
-      run: dotnet publish src/Api/Api.csproj -o src/Api/bin/publish -c Release -v n --no-build
-    - name: Deploy to FTP
+      run: dotnet publish src/Api/Api.csproj \
+        --output src/Api/bin/publish \
+        --configuration Release \
+        --verbosity normal \
+        --no-build \
+        --runtime win-x86 \
+        --property:DebugType=None \
+        --property:DebugSymbols=false
+    - name: Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
         server: ${{ vars.SERVER_DOMAIN_NAME }}
