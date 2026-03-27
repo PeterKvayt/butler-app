@@ -17,7 +17,6 @@
 	<PackageReference Include="Microsoft.ML.ImageAnalytics" Version="5.0.0" />
 	<PackageReference Include="Microsoft.ML.TensorFlow" Version="5.0.0" />
 	<PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.16.0" />
-
   </ItemGroup>
 
   <ItemGroup>
