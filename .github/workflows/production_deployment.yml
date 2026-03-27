@@ -45,7 +45,9 @@ jobs:
         --configuration Release \
         --verbosity normal \
         --no-build \
-        --runtime win-x64
+        --runtime win-x64 \
+        --property:DebugType=None \
+        --property:DebugSymbols=false
     - name: Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
