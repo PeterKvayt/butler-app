@@ -1,9 +1,10 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Arguments;
 using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Enums;
 using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Models;
 using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Features.Telegram.Features.Commands.Constants;
-using Api.Infrastructure.FileSystem.Abstractions;
 using Microsoft.Extensions.ML;
 using Telegram.Bot;
 
@@ -14,19 +15,19 @@ internal sealed class ClassifyImageTelegramCommand : ITelegramCommand
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly PredictionEnginePool<ImageData, ImagePrediction> _predictionEngine;
     private readonly IWebHostEnvironment _webHostEnvironment;
-    private readonly IFileBufferService _fileBufferService;
+    private readonly ICommandArgumentService _commandArgumentService;
 
     public ClassifyImageTelegramCommand(
         TimeProvider timeProvider,
         ITelegramBotClient telegramBotClient,
         PredictionEnginePool<ImageData, ImagePrediction> predictionEngine,
         IWebHostEnvironment webHostEnvironment,
-        IFileBufferService fileBufferService)
+        ICommandArgumentService commandArgumentService)
     {
         _telegramBotClient = telegramBotClient;
         _predictionEngine = predictionEngine;
         _webHostEnvironment = webHostEnvironment;
-        _fileBufferService = fileBufferService;
+        _commandArgumentService = commandArgumentService;
     }
 
     public CommandInfo CommandInfo { get; } = new CommandInfo
@@ -35,21 +36,18 @@ internal sealed class ClassifyImageTelegramCommand : ITelegramCommand
         Description = "Classifies an image"
     };
 
-    public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
+    public async ValueTask ExecuteAsync()
     {
-        if (commandArgs is not ClassifyImageTelegramCommandArgs args)
-        {
-            throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
-        }
-
+        var imageArg = _commandArgumentService.GetRequired<ImageTelegramCommandArg>();
         var data = new ImageData
         {
-            ImagePath = Path.Combine(_webHostEnvironment.ContentRootPath, "tg", "files", args.GetImagePath())
+            ImagePath = Path.Combine(_webHostEnvironment.ContentRootPath, "tg", "files", imageArg.Path)
         };
 
         var prediction = _predictionEngine.Predict(data);
 
-        await _telegramBotClient.SendMessage(args.GetChatId(), $"Image is {GetImgType(prediction.PredictedLabelValue)} ({prediction.PredictedLabelValue}). Scores: {string.Join(";", prediction.Score.OrderDescending().Select(x => x.ToString()))}.");
+        var chatArg = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
+        await _telegramBotClient.SendMessage(chatArg.Id, $"Image is {GetImgType(prediction.PredictedLabelValue)} ({prediction.PredictedLabelValue}). Scores: {string.Join(";", prediction.Score.OrderDescending().Select(x => x.ToString()))}.");
     }
 
     private string GetImgType(string predictedLabelValue)

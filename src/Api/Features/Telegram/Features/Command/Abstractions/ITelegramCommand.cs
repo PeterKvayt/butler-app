@@ -5,5 +5,5 @@ namespace Api.Features.Telegram.Features.Command.Abstractions;
 internal interface ITelegramCommand
 {
     internal CommandInfo CommandInfo { get; }
-    internal ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs);
+    internal ValueTask ExecuteAsync();
 }
