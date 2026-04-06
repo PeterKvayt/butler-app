@@ -1,30 +1,30 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.Cancel.Arguments;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Telegram.Bot.Types;
 
 namespace Api.Features.Telegram.Features.Command.Commands.Cancel;
 
 internal sealed class CancelTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
-    private CancelTelegramCommandArgs _args = new();
+    private readonly ICommandArgumentService _commandArgumentService;
+    private ChatTelegramCommandArg? _chatArg;
 
-    public ITelegramCommandArgs Arguments
+    public CancelTelegramCommandArgsBuilder(
+        ICommandArgumentService commandArgumentService
+        )
     {
-        get => _args;
-        set {
-            if (value is not CancelTelegramCommandArgs args)
-            {
-                throw new InvalidOperationException($"Unsupported args of type {value.GetType()}");
-            }
-
-            _args = args;
-        }
+        _commandArgumentService = commandArgumentService;
     }
-    
+
     public ValueTask AddAgrumentAsync(Message message)
     {
-        if (!_args.ChatId.HasValue)
+        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
+
+        if (_chatArg == null)
         {
-            _args.ChatId = message.Chat.Id;
+            _chatArg = message.Chat.Id;
+            _commandArgumentService.Set(_chatArg);
         }
 
         return ValueTask.CompletedTask;
@@ -32,5 +32,5 @@ internal sealed class CancelTelegramCommandArgsBuilder : ITelegramCommandArgsBui
 
     public Task RequestNextAgrumentAsync() => Task.CompletedTask;
 
-    public bool IsArgumentsFilledIn() => _args.ChatId.HasValue;
+    public bool IsArgumentsFilledIn() => _chatArg.HasValue;
 }

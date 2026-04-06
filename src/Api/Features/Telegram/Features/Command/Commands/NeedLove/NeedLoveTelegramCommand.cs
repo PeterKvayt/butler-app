@@ -1,13 +1,25 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.NeedLove.Arguments;
 using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Features.Telegram.Features.Commands.Constants;
 using Telegram.Bot;
 
 namespace Api.Features.Telegram.Features.Command.Commands.NeedLove;
 
-internal sealed class NeedLoveTelegramCommand(ITelegramBotClient telegramBotClient) : ITelegramCommand
+internal sealed class NeedLoveTelegramCommand : ITelegramCommand
 {
-    private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
+    private readonly ITelegramBotClient _telegramBotClient;
+    private readonly ICommandArgumentService _commandArgumentService;
+
+    public NeedLoveTelegramCommand(
+        ITelegramBotClient telegramBotClient,
+        ICommandArgumentService commandArgumentService
+        )
+    {
+        _telegramBotClient = telegramBotClient;
+        _commandArgumentService = commandArgumentService;
+    }
 
     public CommandInfo CommandInfo { get; } = new CommandInfo
     {
@@ -15,14 +27,10 @@ internal sealed class NeedLoveTelegramCommand(ITelegramBotClient telegramBotClie
         Description = "Scpecial command just for the Lapochka"
     };
 
-    public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
+    public async ValueTask ExecuteAsync()
     {
-        if (commandArgs is not NeedLoveTelegramCommandArgs args)
-        {
-            throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
-        }
-
-        await _telegramBotClient.SendMessage(args.GetChatId(), $"Dear Lapochka, {GetRandomCompliment()}");
+        var chatArgs = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
+        await _telegramBotClient.SendMessage(chatArgs.Id, $"Dear Lapochka, {GetRandomCompliment()}");
     }
 
     private static readonly string[] Compliments =

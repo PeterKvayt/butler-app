@@ -1,4 +1,6 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Arguments;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Infrastructure.FileSystem.Abstractions;
 
 namespace Api.Features.Telegram.Features.Command.Commands.ClassifyImage;
@@ -6,31 +8,24 @@ namespace Api.Features.Telegram.Features.Command.Commands.ClassifyImage;
 internal sealed class ClassifyImageTelegramCommandArgsDestroyer : ITelegramCommandArgsDestroyer
 {
     private readonly IFileBufferService _fileBufferService;
+    private readonly ICommandArgumentService _commandArgumentService;
 
-    public ClassifyImageTelegramCommandArgsDestroyer(IFileBufferService fileSBufferService)
+    public ClassifyImageTelegramCommandArgsDestroyer(
+        IFileBufferService fileSBufferService,
+        ICommandArgumentService commandArgumentService
+        )
     {
         _fileBufferService = fileSBufferService;
+        _commandArgumentService = commandArgumentService;
     }
 
-    public async ValueTask DestroyAsync(ITelegramCommandArgs arguments)
+    public async ValueTask DestroyAsync()
     {
-        if (arguments is not ClassifyImageTelegramCommandArgs args)
+        var imageArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
+
+        if (imageArg.HasValue)
         {
-            throw new InvalidOperationException($"{arguments.GetType().Name} is not supported");
-        }
-
-        var tasks = new List<Task>();
-
-        AddTask(args.ImagePath, tasks);
-
-        await Task.WhenAll(tasks);
-    }
-
-    private void AddTask(string? path, List<Task> tasks)
-    {
-        if (!string.IsNullOrEmpty(path))
-        {
-            tasks.Add(_fileBufferService.DeleteFileAsync(path));
+            await _fileBufferService.DeleteFileAsync(imageArg.Value.Path);
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Infrastructure.FileSystem.Abstractions;
 
 namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices;
@@ -6,26 +8,26 @@ namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityService
 internal sealed class SnapshotUtilityServicesTelegramCommandArgsDestroyer : ITelegramCommandArgsDestroyer
 {
     private readonly IFileBufferService _fileBufferService;
+    private readonly ICommandArgumentService _commandArgumentService;
 
-    public SnapshotUtilityServicesTelegramCommandArgsDestroyer(IFileBufferService fileSBufferService)
+    public SnapshotUtilityServicesTelegramCommandArgsDestroyer(
+        IFileBufferService fileSBufferService,
+        ICommandArgumentService commandArgumentService
+        )
     {
         _fileBufferService = fileSBufferService;
+        _commandArgumentService = commandArgumentService;
     }
 
-    public async ValueTask DestroyAsync(ITelegramCommandArgs arguments)
+    public async ValueTask DestroyAsync()
     {
-        if (arguments is not SnapshotUtilityServicesTelegramCommandArgs args)
-        {
-            throw new InvalidOperationException($"{arguments.GetType().Name} is not supported");
-        }
-
         var tasks = new List<Task>();
 
-        AddTask(args.HotWaterCounterFilePath, tasks);
-        AddTask(args.ColdWaterCounterFilePath, tasks);
-        AddTask(args.ElectricityCounterFilePath, tasks);
-        AddTask(args.UtilityServicesBillFilePath, tasks);
-        AddTask(args.CommunityServicesBillFilePath, tasks);
+        AddTask(_commandArgumentService.Get<HotWaterCounterImageCommandArg>(), tasks);
+        AddTask(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>(), tasks);
+        AddTask(_commandArgumentService.Get<ElectricityCounterImageCommandArg>(), tasks);
+        AddTask(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>(), tasks);
+        AddTask(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>(), tasks);
 
         await Task.WhenAll(tasks);
     }

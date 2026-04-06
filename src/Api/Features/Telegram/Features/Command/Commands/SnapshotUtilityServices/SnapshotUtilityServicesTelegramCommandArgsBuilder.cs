@@ -3,45 +3,47 @@ using Api.Infrastructure.FileSystem.Abstractions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Extensions;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
+using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
 
 namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices;
 
 internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
     private readonly ITelegramBotClient _telegramBotClient;
+    private readonly ICommandArgumentService _commandArgumentService;
     private readonly IFileBufferService _fileBufferService;
-
-    private SnapshotUtilityServicesTelegramCommandArgs _args = new();
 
     private string _nextArgMessage = string.Empty;
 
-    public ITelegramCommandArgs Arguments
-    {
-        get => _args;
-        set {
-            if (value is not SnapshotUtilityServicesTelegramCommandArgs args)
-            {
-                throw new InvalidOperationException($"Unsupported args of type {value.GetType()}");
-            }
+    private ChatTelegramCommandArg? _chatArg;
+    private HotWaterCounterImageCommandArg? _hotWaterArg;
+    private ColdWaterCounterImageCommandArg? _coldWaterArg;
+    private CommunityServicesBillImageCommandArg? _communityServicesBillArg;
+    private ElectricityCounterImageCommandArg? _electricityCounterArg;
+    private UtilityServicesBillImageCommandArg? _utilityServicesBillArg;
 
-            _args = args;
-        }
-    }
-    
-    public SnapshotUtilityServicesTelegramCommandArgsBuilder(ITelegramBotClient telegramBotClient, IFileBufferService fileSBufferService)
+    public SnapshotUtilityServicesTelegramCommandArgsBuilder(
+        ITelegramBotClient telegramBotClient, 
+        ICommandArgumentService commandArgumentService,
+        IFileBufferService fileSBufferService)
     {
         _telegramBotClient = telegramBotClient;
+        _commandArgumentService = commandArgumentService;
         _fileBufferService = fileSBufferService;
     }
 
     public async ValueTask AddAgrumentAsync(Message message)
     {
-        if (!_args.ChatId.HasValue)
+        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
+        if (_chatArg == null)
         {
-            _args.ChatId = message.Chat.Id;
+            _chatArg = message.Chat.Id;
+            _commandArgumentService.Set(_chatArg);
         }
 
-        if (_args.ColdWaterCounterFilePath == null)
+        _coldWaterArg = _commandArgumentService.Get<ColdWaterCounterImageCommandArg>();
+        if (_coldWaterArg == null)
         {
             if (string.IsNullOrWhiteSpace(message.GetFileId()))
             {
@@ -49,14 +51,14 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
                 return;
             }
 
-            _args.ColdWaterCounterFilePath = await GetBufferFilePathAsync(message);
-
+            _coldWaterArg = await GetBufferFilePathAsync(message);
+            _commandArgumentService.Set(_coldWaterArg);
             _nextArgMessage = "Upload community services bill photo";
-
             return;
         }
 
-        if (_args.CommunityServicesBillFilePath == null)
+        _communityServicesBillArg = _commandArgumentService.Get<CommunityServicesBillImageCommandArg>();
+        if (_communityServicesBillArg == null)
         {
             if (string.IsNullOrWhiteSpace(message.GetFileId()))
             {
@@ -64,14 +66,14 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
                 return;
             }
 
-            _args.CommunityServicesBillFilePath = await GetBufferFilePathAsync(message);
-
+            _communityServicesBillArg = await GetBufferFilePathAsync(message);
+            _commandArgumentService.Set(_communityServicesBillArg);
             _nextArgMessage = "Upload electricity counter photo";
-
             return;
         }
 
-        if (_args.ElectricityCounterFilePath == null)
+        _electricityCounterArg = _commandArgumentService.Get<ElectricityCounterImageCommandArg>();
+        if (_electricityCounterArg == null)
         {
             if (string.IsNullOrWhiteSpace(message.GetFileId()))
             {
@@ -79,14 +81,14 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
                 return;
             }
 
-            _args.ElectricityCounterFilePath = await GetBufferFilePathAsync(message);
-
+            _electricityCounterArg = await GetBufferFilePathAsync(message);
+            _commandArgumentService.Set(_electricityCounterArg);
             _nextArgMessage = "Upload hot water counter photo";
-
             return;
         }
 
-        if (_args.HotWaterCounterFilePath == null)
+        _hotWaterArg = _commandArgumentService.Get<HotWaterCounterImageCommandArg>();
+        if (_hotWaterArg == null)
         {
             if (string.IsNullOrWhiteSpace(message.GetFileId()))
             {
@@ -94,14 +96,14 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
                 return;
             }
 
-            _args.HotWaterCounterFilePath = await GetBufferFilePathAsync(message);
-
+            _hotWaterArg = await GetBufferFilePathAsync(message);
+            _commandArgumentService.Set(_hotWaterArg);
             _nextArgMessage = "Upload utility services bill photo";
-
             return;
         }
 
-        if (_args.UtilityServicesBillFilePath == null)
+        _utilityServicesBillArg = _commandArgumentService.Get<UtilityServicesBillImageCommandArg>();
+        if (_utilityServicesBillArg == null)
         {
             if (string.IsNullOrWhiteSpace(message.GetFileId()))
             {
@@ -109,22 +111,22 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
                 return;
             }
 
-            _args.UtilityServicesBillFilePath = await GetBufferFilePathAsync(message);
-
+            _utilityServicesBillArg = await GetBufferFilePathAsync(message);
+            _commandArgumentService.Set(_utilityServicesBillArg);
             return;
         }
     }
 
-    public Task RequestNextAgrumentAsync() => _telegramBotClient.SendMessage(_args.GetChatId(), _nextArgMessage);
+    public Task RequestNextAgrumentAsync() => _telegramBotClient.SendMessage(_chatArg.Value.Id, _nextArgMessage);
 
     public bool IsArgumentsFilledIn()
     {
-        return _args.ChatId.HasValue 
-            && _args.ColdWaterCounterFilePath != null
-            && _args.CommunityServicesBillFilePath != null
-            && _args.ElectricityCounterFilePath != null
-            && _args.HotWaterCounterFilePath != null
-            && _args.UtilityServicesBillFilePath != null
+        return _chatArg.HasValue 
+            && _hotWaterArg.HasValue
+            && _coldWaterArg.HasValue
+            && _communityServicesBillArg.HasValue
+            && _electricityCounterArg.HasValue
+            && _utilityServicesBillArg.HasValue
             ;
     }
 

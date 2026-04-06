@@ -7,9 +7,9 @@ using Api.Features.Telegram.Features.Command.Extensions;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommand;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsBuilder;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsDestroyer;
-using Api.Features.Telegram.Features.Command.Services.CommandContext;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
+using Api.Features.Telegram.Features.Command.Services.CurrentCommand;
 using Api.Features.Telegram.Features.Commands.Constants;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.ML;
 
@@ -29,7 +29,8 @@ internal static class Composition
             .AddScoped<ITelegramCommandProvider, TelegramCommandProvider>()
             .AddScoped<ITelegramCommandArgsBuilderProvider, TelegramCommandArgsBuilderProvider>()
             .AddScoped<ITelegramCommandArgsDestroyerProvider, TelegramCommandArgsDestroyerProvider>()
-            .AddScoped<ICommandContextService, CommandContextService>()
+            .AddScoped<ICommandArgumentService, CommandArgumentService>()
+            .AddScoped<ICurrentCommandService, CurrentCommandService>()
             .AddCommandInfoProvider();
 
         builder.Services.TryAddSingleton(TimeProvider.System);

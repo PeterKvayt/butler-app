@@ -1,5 +1,7 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
 using Api.Features.Telegram.Features.Command.Models;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Features.Telegram.Features.Commands.Constants;
 using Api.Infrastructure.FileSystem.Abstractions;
 using Telegram.Bot;
@@ -9,17 +11,20 @@ namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityService
 internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
 {
     private readonly TimeProvider _timeProvider;
+    private readonly ICommandArgumentService _commandArgumentService;
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly IFileSystemService _fileSystemService;
     private readonly IFileBufferService _fileBufferService;
 
     public SnapshotUtilityServicesTelegramCommand(
         TimeProvider timeProvider,
+        ICommandArgumentService commandArgumentService,
         ITelegramBotClient telegramBotClient, 
         IFileSystemService fileSystemService,
         IFileBufferService fileBufferService)
     {
         _timeProvider = timeProvider;
+        _commandArgumentService = commandArgumentService;
         _telegramBotClient = telegramBotClient;
         _fileSystemService = fileSystemService;
         _fileBufferService = fileBufferService;
@@ -31,27 +36,22 @@ internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
         Description = "Snapshot utility services"
     };
 
-    public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
+    public async ValueTask ExecuteAsync()
     {
-        if (commandArgs is not SnapshotUtilityServicesTelegramCommandArgs args)
-        {
-            throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
-        }
-
         var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
         var utcLastMonth = utcNow.AddMonths(-1);
 
         var basePath = $"/Коммуналка";
 
         await Task.WhenAll(
-            ProcessFileAsync(args.GetColdWaterCounterFilePath(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
-            ProcessFileAsync(args.GetHotWaterCounterFilePath(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
-            ProcessFileAsync(args.GetElectricityCounterFilePath(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
-            ProcessFileAsync(args.GetUtilityServicesBillFilePath(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
-            ProcessFileAsync(args.GetCommunityServicesBillFilePath(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
+            ProcessFileAsync(_commandArgumentService.GetRequired<ColdWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
+            ProcessFileAsync(_commandArgumentService.GetRequired<HotWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
+            ProcessFileAsync(_commandArgumentService.GetRequired<ElectricityCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
+            ProcessFileAsync(_commandArgumentService.GetRequired<UtilityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
+            ProcessFileAsync(_commandArgumentService.GetRequired<CommunityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
         );
 
-        await _telegramBotClient.SendMessage(args.GetChatId(), "Utility services saved to disk");
+        await _telegramBotClient.SendMessage(_commandArgumentService.GetRequired<ChatTelegramCommandArg>().Id, "Utility services saved to disk");
     }
 
     private async Task ProcessFileAsync(string bufferFilePath, string targetPath)

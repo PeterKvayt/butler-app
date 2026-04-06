@@ -1,36 +1,34 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.NeedLove.Arguments;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Telegram.Bot.Types;
 
 namespace Api.Features.Telegram.Features.Command.Commands.NeedLove;
 
 internal sealed class NeedLoveTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
-    private NeedLoveTelegramCommandArgs _args = new();
+    private readonly ICommandArgumentService _commandArgumentService;
+    private ChatTelegramCommandArg? _chatArg;
 
-    public ITelegramCommandArgs Arguments
+    public NeedLoveTelegramCommandArgsBuilder(ICommandArgumentService commandArgumentService)
     {
-        get => _args;
-        set {
-            if (value is not NeedLoveTelegramCommandArgs args)
-            {
-                throw new InvalidOperationException($"Unsupported args of type {value.GetType()}");
-            }
-
-            _args = args;
-        }
+        _commandArgumentService = commandArgumentService;
     }
-    
+
     public ValueTask AddAgrumentAsync(Message message)
     {
-        _args.ChatId = message.Chat.Id;
+        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
+
+        if (_chatArg == null)
+        {
+            _chatArg = message.Chat.Id;
+            _commandArgumentService.Set(_chatArg);
+        }
 
         return ValueTask.CompletedTask;
     }
 
     public Task RequestNextAgrumentAsync() => Task.CompletedTask;
 
-    public bool IsArgumentsFilledIn()
-    {
-        return _args.ChatId.HasValue;
-    }
+    public bool IsArgumentsFilledIn() => _chatArg.HasValue;
 }

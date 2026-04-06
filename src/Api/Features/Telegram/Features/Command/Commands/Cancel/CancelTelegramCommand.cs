@@ -1,7 +1,9 @@
-﻿using Api.Features.Telegram.Features.Authentication.Extensions;
-using Api.Features.Telegram.Features.Command.Abstractions;
+﻿using Api.Features.Telegram.Features.Command.Abstractions;
+using Api.Features.Telegram.Features.Command.Commands.Cancel.Arguments;
 using Api.Features.Telegram.Features.Command.Models;
-using Api.Features.Telegram.Features.Command.Services.CommandContext;
+using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsDestroyer;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
+using Api.Features.Telegram.Features.Command.Services.CurrentCommand;
 using Api.Features.Telegram.Features.Commands.Constants;
 using Telegram.Bot;
 
@@ -9,18 +11,21 @@ namespace Api.Features.Telegram.Features.Command.Commands.Cancel;
 
 internal sealed class CancelTelegramCommand : ITelegramCommand
 {
+    private readonly ITelegramCommandArgsDestroyerProvider _telegramCommandArgsDestroyerProvider;
+    private readonly ICurrentCommandService _currentCommandService;
+    private readonly ICommandArgumentService _commandArgumentService;
     private readonly ITelegramBotClient _telegramBotClient;
-    private readonly ICommandContextService _commandContextService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CancelTelegramCommand(
-        ITelegramBotClient telegramBotClient,
-        ICommandContextService commandContextService,
-        IHttpContextAccessor httpContextAccessor)
+        ITelegramCommandArgsDestroyerProvider telegramCommandArgsDestroyerProvider,
+        ICurrentCommandService currentCommandService,
+        ICommandArgumentService commandArgumentService,
+        ITelegramBotClient telegramBotClient)
     {
+        _telegramCommandArgsDestroyerProvider = telegramCommandArgsDestroyerProvider;
+        _currentCommandService = currentCommandService;
+        _commandArgumentService = commandArgumentService;
         _telegramBotClient = telegramBotClient;
-        _commandContextService = commandContextService;
-        _httpContextAccessor = httpContextAccessor;
     }
 
     public CommandInfo CommandInfo { get; } = new CommandInfo
@@ -29,23 +34,27 @@ internal sealed class CancelTelegramCommand : ITelegramCommand
         Description = "Cancel the current command"
     };
 
-    public async ValueTask ExecuteAsync(ITelegramCommandArgs commandArgs)
+    public async ValueTask ExecuteAsync()
     {
-        if (commandArgs is not CancelTelegramCommandArgs args)
-        {
-            throw new InvalidOperationException($"{commandArgs.GetType().Name} is not supported");
-        }
-
-        var userId = _httpContextAccessor.GetTelegramUserId();
-
-        var context = _commandContextService.GetContext(userId);
-        var commandName = context?.CommandName;
+        var commandName = _currentCommandService.GetOrCreate(null);
         var text = commandName is null
             ? "The current command has been canceled"
             : $"The \"{commandName}\" command has been canceled";
+        var chat = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
 
-        await _commandContextService.RemoveContextAsync(userId);
+        if (commandName == null)
+        {
+            await _telegramBotClient.SendMessage(chat.Id, text);
+            return;
+        }
 
-        await _telegramBotClient.SendMessage(args.GetChatId(), text);
+        var argumentsDestroyer = _telegramCommandArgsDestroyerProvider.GetDestroyer(commandName);
+
+        if (argumentsDestroyer != null)
+        {
+            await argumentsDestroyer.DestroyAsync();
+        }
+
+        await _telegramBotClient.SendMessage(chat.Id, text);
     }
 }
