@@ -1,4 +1,5 @@
 ﻿using Api.Features.Telegram.Features.Authentication.Extensions;
+using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsDestroyer;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace Api.Features.Telegram.Features.Command.Services.CurrentCommand;
@@ -7,18 +8,22 @@ internal sealed class CurrentCommandService: ICurrentCommandService
 {
     private readonly IFusionCache _cache;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITelegramCommandArgsDestroyerProvider _telegramCommandArgsDestroyerProvider;
 
-    public CurrentCommandService(IFusionCache cache, IHttpContextAccessor httpContextAccessor)
+    public CurrentCommandService(
+        IFusionCache cache, 
+        IHttpContextAccessor httpContextAccessor,
+        ITelegramCommandArgsDestroyerProvider telegramCommandArgsDestroyerProvider)
     {
         _cache = cache;
         _httpContextAccessor = httpContextAccessor;
+        _telegramCommandArgsDestroyerProvider = telegramCommandArgsDestroyerProvider;
     }
 
     public string? GetOrCreate(string? commandName)
     {
-        var userId = _httpContextAccessor.GetTelegramUserId();
         return _cache.GetOrSet<string?>(
-            GetKey(userId),
+            GetKey(),
             (ctx, ct) =>
             {
                 if (commandName == null)
@@ -31,11 +36,15 @@ internal sealed class CurrentCommandService: ICurrentCommandService
         );
     }
 
-    public void Remove()
+    public async ValueTask RemoveAsync()
     {
-        var userId = _httpContextAccessor.GetTelegramUserId();
-        _cache.Remove(GetKey(userId));
+        var key = GetKey();
+        await _cache.RemoveAsync(key);
     }
 
-    private static string GetKey(long userId) => $"CurrentCommand.{userId}";
+    private string GetKey()
+    {
+        var userId = _httpContextAccessor.GetTelegramUserId();
+        return $"CurrentCommand.{userId}";
+    }
 }

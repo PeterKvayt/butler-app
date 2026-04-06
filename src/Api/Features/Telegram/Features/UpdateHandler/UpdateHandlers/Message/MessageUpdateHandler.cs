@@ -3,6 +3,7 @@ using Api.Features.Telegram.Features.Command.Commands.Cancel.Extensions;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommand;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandArgsBuilder;
 using Api.Features.Telegram.Features.Command.Providers.TelegramCommandInfo;
+using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Features.Telegram.Features.Command.Services.CurrentCommand;
 using Api.Features.Telegram.Features.UpdateHandler.Abstractions;
 using Api.Features.Telegram.Features.UpdateHandler.Extensions;
@@ -14,18 +15,21 @@ namespace Api.Features.Telegram.Features.UpdateHandler.UpdateHandlers.Message;
 
 internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
 {
+    private readonly ICommandArgumentService _commandArgumentService;
     private readonly ICurrentCommandService _currentCommandService;
     private readonly ITelegramCommandArgsBuilderProvider _builderProvider;
     private readonly ITelegramCommandProvider _telegramCommandProvider;
     private readonly ITelegramCommandInfoProvider _telegramCommandInfoProvider;
 
     public MessageUpdateHandler(
+        ICommandArgumentService commandArgumentService,
         ICurrentCommandService currentCommandService,
         IHttpContextAccessor httpContextAccessor,
         ITelegramCommandArgsBuilderProvider builderProvider,
         ITelegramCommandProvider telegramCommandProvider,
         ITelegramCommandInfoProvider telegramCommandInfoProvider)
     {
+        _commandArgumentService = commandArgumentService;
         _currentCommandService = currentCommandService;
         _builderProvider = builderProvider;
         _telegramCommandProvider = telegramCommandProvider;
@@ -68,7 +72,8 @@ internal sealed class MessageUpdateHandler : ITelegramUpdateHandler
         var command = _telegramCommandProvider.GetCommand(commandName);
         await command.ExecuteAsync();
 
-        _currentCommandService.Remove();
+        await _commandArgumentService.ClearArgumentsAsync(commandName);
+        await _currentCommandService.RemoveAsync();
     }
 
     private bool IsCancelCommand([NotNullWhen(true)] string? commandName)

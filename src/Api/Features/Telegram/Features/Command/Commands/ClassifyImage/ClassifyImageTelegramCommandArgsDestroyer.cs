@@ -21,7 +21,7 @@ internal sealed class ClassifyImageTelegramCommandArgsDestroyer : ITelegramComma
 
     public async ValueTask DestroyAsync()
     {
-        var imageArg = _commandArgumentService.Get<ImageTelegramCommandArg?>();
+        var imageArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
 
         if (imageArg.HasValue)
         {
