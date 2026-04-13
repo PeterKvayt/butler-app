@@ -21,22 +21,22 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsDestroyer : ITel
 
     public async ValueTask DestroyAsync()
     {
-        var tasks = new List<Task>();
-
-        AddTask(_commandArgumentService.Get<HotWaterCounterImageCommandArg>(), tasks);
-        AddTask(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>(), tasks);
-        AddTask(_commandArgumentService.Get<ElectricityCounterImageCommandArg>(), tasks);
-        AddTask(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>(), tasks);
-        AddTask(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>(), tasks);
-
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(
+            DeleteFileFromBuffer(_commandArgumentService.Get<HotWaterCounterImageCommandArg>()),
+            DeleteFileFromBuffer(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>()),
+            DeleteFileFromBuffer(_commandArgumentService.Get<ElectricityCounterImageCommandArg>()),
+            DeleteFileFromBuffer(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>()),
+            DeleteFileFromBuffer(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>())
+        );
     }
 
-    private void AddTask(string? path, List<Task> tasks)
+    private Task DeleteFileFromBuffer(string? path)
     {
-        if (!string.IsNullOrEmpty(path))
+        if (path == null)
         {
-            tasks.Add(_fileBufferService.DeleteFileAsync(path));
+            return Task.CompletedTask;
         }
+
+        return _fileBufferService.DeleteFileAsync(path);
     }
 }

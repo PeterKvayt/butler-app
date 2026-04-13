@@ -44,18 +44,23 @@ internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
         var basePath = $"/Коммуналка";
 
         await Task.WhenAll(
-            ProcessFileAsync(_commandArgumentService.GetRequired<ColdWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
-            ProcessFileAsync(_commandArgumentService.GetRequired<HotWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
-            ProcessFileAsync(_commandArgumentService.GetRequired<ElectricityCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
-            ProcessFileAsync(_commandArgumentService.GetRequired<UtilityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
-            ProcessFileAsync(_commandArgumentService.GetRequired<CommunityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
+            ProcessFileAsync(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
+            ProcessFileAsync(_commandArgumentService.Get<HotWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
+            ProcessFileAsync(_commandArgumentService.Get<ElectricityCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
+            ProcessFileAsync(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
+            ProcessFileAsync(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
         );
 
         await _telegramBotClient.SendMessage(_commandArgumentService.GetRequired<ChatTelegramCommandArg>().Id, "Utility services saved to disk");
     }
 
-    private async Task ProcessFileAsync(string bufferFilePath, string targetPath)
+    private async Task ProcessFileAsync(string? bufferFilePath, string targetPath)
     {
+        if (bufferFilePath == null)
+        {
+            return;
+        }
+
         var extension = Path.GetExtension(bufferFilePath);
         var targetPathWithExtension = $"{targetPath}{extension}";
 
