@@ -1,15 +1,22 @@
 ﻿using Api.Features.Telegram.Features.Command.Abstractions;
 using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Arguments;
+using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Enums;
+using Api.Features.Telegram.Features.Command.Commands.ClassifyImage.Models;
 using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Extensions;
 using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Infrastructure.FileSystem.Abstractions;
+using Microsoft.Extensions.ML;
+using System.Diagnostics;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Api.Features.Telegram.Features.Command.Commands.ClassifyImage;
 
 internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
+    private readonly PredictionEnginePool<ImageData, ImagePrediction> _predictionEngine;
+    private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly ICommandArgumentService _commandArgumentService;
     private readonly IFileBufferService _fileBufferService;
@@ -19,11 +26,17 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
 
     private string _nextArgMessage = string.Empty;
 
+    private bool _argsFilledIn = false;
+
     public ClassifyImageTelegramCommandArgsBuilder(
+        PredictionEnginePool<ImageData, ImagePrediction> predictionEngine,
+        IWebHostEnvironment webHostEnvironment,
         ITelegramBotClient telegramBotClient,
         ICommandArgumentService commandArgumentService,
         IFileBufferService fileSBufferService)
     {
+        _predictionEngine = predictionEngine;
+        _webHostEnvironment = webHostEnvironment;
         _telegramBotClient = telegramBotClient;
         _commandArgumentService = commandArgumentService;
         _fileBufferService = fileSBufferService;
@@ -38,32 +51,77 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
             _commandArgumentService.Set(_chatArg);
         }
 
-        _imageArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
-        if (_imageArg == null)
+        if ("ok".Equals(message.Text, StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(message.GetFileId()))
-            {
-                _nextArgMessage = "Upload photo";
-                return;
-            }
+            _argsFilledIn = true;
+            return;
+        }
 
-            _imageArg = await GetBufferFilePathAsync(message);
-            _commandArgumentService.Set(_imageArg);
+        if (string.IsNullOrWhiteSpace(message.GetFileId()))
+        {
+            _nextArgMessage = "Upload photo";
+            return;
+        }
+
+        var filePath = await GetBufferFilePathAsync(message);
+        var prediction = Predict(filePath);
+        var category = GetCategory(prediction);
+
+        if (category == ImageCategory.ElectricityCounter)
+        {
+            _commandArgumentService.Set<ImageTelegramCommandArg>(filePath);
+            var accuracy = Math.Round(prediction.Score.OrderDescending().First() * 100, 4);
+            await _telegramBotClient.SendPhoto(message.Chat.Id, message.GetRequiredFileId(), $"Accuracy: {accuracy}%");
         }
     }
 
-    public Task RequestNextAgrumentAsync() => _telegramBotClient.SendMessage(_chatArg.Value.Id, _nextArgMessage);
+    private ImageCategory GetCategory(ImagePrediction prediction)
+    {
+        if (!int.TryParse(prediction.PredictedLabelValue, out var intCategory))
+        {
+            throw new InvalidOperationException($"Unable to parse PredictedLabelValue: {prediction.PredictedLabelValue}");
+        }
+
+        var category = (ImageCategory)intCategory;
+
+        if (!Enum.IsDefined(category))
+        {
+            throw new InvalidOperationException($"Unable to parse PredictedLabelValue: {prediction.PredictedLabelValue}");
+        }
+
+        return category;
+    }
+
+    private ImagePrediction Predict(string filePath)
+    {
+        var data = new ImageData
+        {
+            ImagePath = Path.Combine(_webHostEnvironment.ContentRootPath, "tg", "files", filePath)
+        };
+
+        var prediction = _predictionEngine.Predict(data);
+
+        return prediction;
+    }
+
+    public Task RequestNextAgrumentAsync()
+    {
+        if (string.IsNullOrEmpty(_nextArgMessage))
+        {
+            return Task.CompletedTask;
+        }
+
+        return _telegramBotClient.SendMessage(_chatArg.Value.Id, _nextArgMessage);
+    }
 
     public bool IsArgumentsFilledIn()
     {
-        return _chatArg.HasValue 
-            && _imageArg.HasValue;
+        return _argsFilledIn;
     }
 
     private async Task<string> GetBufferFilePathAsync(Message message)
     {
-        var fileId = message.GetFileId()
-            ?? throw new InvalidOperationException("FileId is null");
+        var fileId = message.GetRequiredFileId();
 
         var fileInfo = await _telegramBotClient.GetFile(fileId);
 

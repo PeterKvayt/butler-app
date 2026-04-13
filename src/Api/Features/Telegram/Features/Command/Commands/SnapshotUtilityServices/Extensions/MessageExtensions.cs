@@ -14,4 +14,9 @@ internal static class MessageExtensions
             _ => null
         };
     }
+
+    public static string GetRequiredFileId(this Message message)
+    {
+        return GetFileId(message) ?? throw new InvalidOperationException("FileId is null"); ;
+    }
 }

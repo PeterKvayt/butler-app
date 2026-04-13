@@ -38,10 +38,15 @@ internal sealed class ClassifyImageTelegramCommand : ITelegramCommand
 
     public async ValueTask ExecuteAsync()
     {
-        var imageArg = _commandArgumentService.GetRequired<ImageTelegramCommandArg>();
+        var imageArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
+        if (!imageArg.HasValue)
+        {
+            return;
+        }
+
         var data = new ImageData
         {
-            ImagePath = Path.Combine(_webHostEnvironment.ContentRootPath, "tg", "files", imageArg.Path)
+            ImagePath = Path.Combine(_webHostEnvironment.ContentRootPath, "tg", "files", imageArg.Value.Path)
         };
 
         var prediction = _predictionEngine.Predict(data);
