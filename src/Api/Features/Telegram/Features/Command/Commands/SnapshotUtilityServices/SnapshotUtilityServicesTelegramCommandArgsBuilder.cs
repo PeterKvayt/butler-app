@@ -19,10 +19,8 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
     private readonly ICommandArgumentService _commandArgumentService;
     private readonly IFileBufferService _fileBufferService;
 
-    private string _nextArgMessage = string.Empty;
+    private string? _nextArgMessage;
     private bool _argsFilledIn = false;
-
-    private ChatTelegramCommandArg? _chatArg;
 
     public SnapshotUtilityServicesTelegramCommandArgsBuilder(
         PredictionEnginePool<ImageData, ImagePrediction> predictionEngine,
@@ -62,71 +60,64 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
         switch (category)
         {
             case ImageCategory.HotWaterCounter:
-                _commandArgumentService.Set<HotWaterCounterImageCommandArg>(filePath);
+                await UpsertFile<HotWaterCounterImageCommandArg>(filePath);
                 break;
             case ImageCategory.ColdWaterCounter:
-                _commandArgumentService.Set<ColdWaterCounterImageCommandArg>(filePath);
+                await UpsertFile<ColdWaterCounterImageCommandArg>(filePath);
                 break;
             case ImageCategory.ElectricityCounter:
-                _commandArgumentService.Set<ElectricityCounterImageCommandArg>(filePath);
+                await UpsertFile<ElectricityCounterImageCommandArg>(filePath);
                 break;
             case ImageCategory.UtilityServicesBill:
-                _commandArgumentService.Set<UtilityServicesBillImageCommandArg>(filePath);
+                await UpsertFile<UtilityServicesBillImageCommandArg>(filePath);
                 break;
             case ImageCategory.CommunityServicesBill:
-                _commandArgumentService.Set<CommunityServicesBillImageCommandArg>(filePath);
+                await UpsertFile<CommunityServicesBillImageCommandArg>(filePath);
                 break;
             default:
+                await _fileBufferService.DeleteFileAsync(filePath);
                 throw new NotSupportedException($"{category} is not supported");
         }
 
-        var accuracy = Math.Round(prediction.Score.OrderDescending().First() * 100, 4);
+        var accuracy = Math.Round(prediction.Score.OrderDescending().First() * 100, 2);
         await _telegramBotClient.SendPhoto(message.Chat.Id, message.GetRequiredFileId(), $"{category}: {accuracy}%");
     }
 
     public Task RequestNextAgrumentAsync()
     {
-        if (string.IsNullOrEmpty(_nextArgMessage))
+        if (_nextArgMessage == null)
         {
             return Task.CompletedTask;
         }
 
-        if (_chatArg == null)
-        {
-            throw new InvalidOperationException("Chat arg is not setted up");
-        }
-
-        return _telegramBotClient.SendMessage(_chatArg.Value.Id, _nextArgMessage);
+        var chatArg = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
+        return _telegramBotClient.SendMessage(chatArg.Id, _nextArgMessage);
     }
 
     public bool IsArgumentsFilledIn() => _argsFilledIn;
 
     private void FillChatArg(Message message)
     {
-        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
-        if (_chatArg == null)
+        var chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
+        if (chatArg == null)
         {
-            _chatArg = message.Chat.Id;
-            _commandArgumentService.Set(_chatArg);
+            _commandArgumentService.Set<ChatTelegramCommandArg>(message.Chat.Id);
         }
     }
 
     private async Task<string> GetBufferFilePathAsync(string fileId)
     {
-        if (_chatArg == null)
-        {
-            throw new InvalidOperationException("Chat arg is not setted up");
-        }
+        var chatArg = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
 
         var fileInfo = await _telegramBotClient.GetFile(fileId);
 
         using var fileStream = new MemoryStream();
         var filePath = fileInfo.FilePath
-            ?? throw new InvalidOperationException($"File path is null for fileId {fileId} in chat {_chatArg.Value.Id}");
+            ?? throw new InvalidOperationException($"File path is null for fileId {fileId} in chat {chatArg.Id}");
         await _telegramBotClient.DownloadFile(filePath, fileStream);
         fileStream.Seek(0, SeekOrigin.Begin);
 
-        var relativeFilePath = $"{_chatArg.Value.Id}/{fileInfo.FileUniqueId}{Path.GetExtension(fileInfo.FilePath)}";
+        var relativeFilePath = $"{chatArg.Id}/{fileInfo.FileUniqueId}{Path.GetExtension(fileInfo.FilePath)}";
         await _fileBufferService.SaveFileAsync(fileStream, relativeFilePath);
 
         return relativeFilePath;
@@ -159,5 +150,15 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsBuilder : ITeleg
         }
 
         return category;
+    }
+
+    private async ValueTask UpsertFile<T>(T newArg) where T : IPathCommandArg
+    {
+        var currentFilePath = _commandArgumentService.Get<T>();
+        _commandArgumentService.Set(newArg);
+        if (currentFilePath != null)
+        {
+            await _fileBufferService.DeleteFileAsync(currentFilePath.Path);
+        }
     }
 }

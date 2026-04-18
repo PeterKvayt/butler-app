@@ -1,9 +1,14 @@
 ﻿namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
 
-internal struct UtilityServicesBillImageCommandArg
+internal sealed record UtilityServicesBillImageCommandArg : IPathCommandArg
 {
-    public string Path;
+    public string Path { get; }
 
-    public static implicit operator UtilityServicesBillImageCommandArg(string path) => new() { Path = path };
-    public static implicit operator string(UtilityServicesBillImageCommandArg arg) => arg.Path;
+    private UtilityServicesBillImageCommandArg(string path)
+    {
+        Path = path;
+    }
+
+    public static implicit operator UtilityServicesBillImageCommandArg(string path) => new(path);
+    public static implicit operator string?(UtilityServicesBillImageCommandArg? arg) => arg?.Path;
 }

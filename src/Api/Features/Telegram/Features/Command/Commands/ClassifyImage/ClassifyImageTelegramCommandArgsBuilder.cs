@@ -6,10 +6,8 @@ using Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Ex
 using Api.Features.Telegram.Features.Command.Services.CommandArgument;
 using Api.Infrastructure.FileSystem.Abstractions;
 using Microsoft.Extensions.ML;
-using System.Diagnostics;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace Api.Features.Telegram.Features.Command.Commands.ClassifyImage;
 
@@ -21,11 +19,7 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
     private readonly ICommandArgumentService _commandArgumentService;
     private readonly IFileBufferService _fileBufferService;
 
-    private ChatTelegramCommandArg? _chatArg;
-    private ImageTelegramCommandArg? _imageArg;
-
-    private string _nextArgMessage = string.Empty;
-
+    private string? _nextArgMessage;
     private bool _argsFilledIn = false;
 
     public ClassifyImageTelegramCommandArgsBuilder(
@@ -44,12 +38,7 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
 
     public async ValueTask AddAgrumentAsync(Message message)
     {
-        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
-        if (_chatArg == null)
-        {
-            _chatArg = message.Chat.Id;
-            _commandArgumentService.Set(_chatArg);
-        }
+        FillChatArg(message);
 
         if ("ok".Equals(message.Text, StringComparison.OrdinalIgnoreCase))
         {
@@ -69,9 +58,27 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
 
         if (category == ImageCategory.ElectricityCounter)
         {
+            var oldImgArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
             _commandArgumentService.Set<ImageTelegramCommandArg>(filePath);
             var accuracy = Math.Round(prediction.Score.OrderDescending().First() * 100, 4);
             await _telegramBotClient.SendPhoto(message.Chat.Id, message.GetRequiredFileId(), $"Accuracy: {accuracy}%");
+            if (oldImgArg != null)
+            {
+                await _fileBufferService.DeleteFileAsync(oldImgArg);
+            }
+        }
+        else
+        {
+            await _fileBufferService.DeleteFileAsync(filePath);
+            _nextArgMessage = "Electricity counter photo expected";
+        }
+    }
+
+    private void FillChatArg(Message message)
+    {
+        if (_commandArgumentService.Get<ChatTelegramCommandArg>() == null)
+        {
+            _commandArgumentService.Set<ChatTelegramCommandArg>(message.Chat.Id);
         }
     }
 
@@ -106,12 +113,13 @@ internal sealed class ClassifyImageTelegramCommandArgsBuilder : ITelegramCommand
 
     public Task RequestNextAgrumentAsync()
     {
-        if (string.IsNullOrEmpty(_nextArgMessage))
+        if (_nextArgMessage == null)
         {
             return Task.CompletedTask;
         }
 
-        return _telegramBotClient.SendMessage(_chatArg.Value.Id, _nextArgMessage);
+        var chatArg = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
+        return _telegramBotClient.SendMessage(chatArg.Id, _nextArgMessage);
     }
 
     public bool IsArgumentsFilledIn()

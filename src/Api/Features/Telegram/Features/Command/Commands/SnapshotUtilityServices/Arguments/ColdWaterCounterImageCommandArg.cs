@@ -1,9 +1,14 @@
 ﻿namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
 
-internal struct ColdWaterCounterImageCommandArg
+internal sealed record ColdWaterCounterImageCommandArg : IPathCommandArg
 {
-    public string Path;
+    public string Path { get; }
 
-    public static implicit operator ColdWaterCounterImageCommandArg(string path) => new() { Path = path };
-    public static implicit operator string(ColdWaterCounterImageCommandArg arg) => arg.Path;
+    private ColdWaterCounterImageCommandArg(string path)
+    {
+        Path = path;
+    }
+
+    public static implicit operator ColdWaterCounterImageCommandArg(string path) => new(path);
+    public static implicit operator string?(ColdWaterCounterImageCommandArg? arg) => arg?.Path;
 }

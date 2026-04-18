@@ -42,29 +42,29 @@ internal sealed class SnapshotUtilityServicesTelegramCommand : ITelegramCommand
         var utcLastMonth = utcNow.AddMonths(-1);
 
         var basePath = $"/Коммуналка";
-
         await Task.WhenAll(
-            ProcessFileAsync(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
-            ProcessFileAsync(_commandArgumentService.Get<HotWaterCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
-            ProcessFileAsync(_commandArgumentService.Get<ElectricityCounterImageCommandArg>(), $"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
-            ProcessFileAsync(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
-            ProcessFileAsync(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>(), $"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
+            ProcessFileAsync<ColdWaterCounterImageCommandArg>($"{basePath}/{utcNow:yyyy}/{utcNow:MM} холодная вода"),
+            ProcessFileAsync<HotWaterCounterImageCommandArg>($"{basePath}/{utcNow:yyyy}/{utcNow:MM} горячая вода"),
+            ProcessFileAsync<ElectricityCounterImageCommandArg>($"{basePath}/{utcNow:yyyy}/{utcNow:MM} электричество"),
+            ProcessFileAsync<UtilityServicesBillImageCommandArg>($"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} жкх"),
+            ProcessFileAsync<CommunityServicesBillImageCommandArg>($"{basePath}/{utcLastMonth:yyyy}/{utcLastMonth:MM} товарищество")
         );
 
         await _telegramBotClient.SendMessage(_commandArgumentService.GetRequired<ChatTelegramCommandArg>().Id, "Utility services saved to disk");
     }
 
-    private async Task ProcessFileAsync(string? bufferFilePath, string targetPath)
+    private async Task ProcessFileAsync<T>(string targetPath) where T : IPathCommandArg
     {
-        if (bufferFilePath == null)
+        var arg = _commandArgumentService.Get<T>();
+        if (arg == null)
         {
             return;
         }
 
-        var extension = Path.GetExtension(bufferFilePath);
+        var extension = Path.GetExtension(arg.Path);
         var targetPathWithExtension = $"{targetPath}{extension}";
 
-        using var file = await _fileBufferService.GetFileAsync(bufferFilePath);
+        using var file = await _fileBufferService.GetFileAsync(arg.Path);
 
         await _fileSystemService.SaveFileAsync(file, targetPathWithExtension);
     }

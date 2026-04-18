@@ -37,24 +37,20 @@ internal sealed class CancelTelegramCommand : ITelegramCommand
     public async ValueTask ExecuteAsync()
     {
         var commandName = _currentCommandService.GetOrCreate(null);
-        var text = commandName is null
-            ? "The current command has been canceled"
-            : $"The \"{commandName}\" command has been canceled";
         var chat = _commandArgumentService.GetRequired<ChatTelegramCommandArg>();
 
         if (commandName == null)
         {
-            await _telegramBotClient.SendMessage(chat.Id, text);
+            await _telegramBotClient.SendMessage(chat.Id, "There is no current command");
             return;
         }
 
         var argumentsDestroyer = _telegramCommandArgsDestroyerProvider.GetDestroyer(commandName);
-
         if (argumentsDestroyer != null)
         {
             await argumentsDestroyer.DestroyAsync();
         }
 
-        await _telegramBotClient.SendMessage(chat.Id, text);
+        await _telegramBotClient.SendMessage(chat.Id, $"The \"{commandName}\" command has been canceled");
     }
 }

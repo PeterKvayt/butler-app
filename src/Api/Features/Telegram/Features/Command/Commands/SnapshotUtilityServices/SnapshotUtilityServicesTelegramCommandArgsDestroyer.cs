@@ -22,21 +22,22 @@ internal sealed class SnapshotUtilityServicesTelegramCommandArgsDestroyer : ITel
     public async ValueTask DestroyAsync()
     {
         await Task.WhenAll(
-            DeleteFileFromBuffer(_commandArgumentService.Get<HotWaterCounterImageCommandArg>()),
-            DeleteFileFromBuffer(_commandArgumentService.Get<ColdWaterCounterImageCommandArg>()),
-            DeleteFileFromBuffer(_commandArgumentService.Get<ElectricityCounterImageCommandArg>()),
-            DeleteFileFromBuffer(_commandArgumentService.Get<UtilityServicesBillImageCommandArg>()),
-            DeleteFileFromBuffer(_commandArgumentService.Get<CommunityServicesBillImageCommandArg>())
+            DeleteFileFromBuffer<HotWaterCounterImageCommandArg>(),
+            DeleteFileFromBuffer<ColdWaterCounterImageCommandArg>(),
+            DeleteFileFromBuffer<ElectricityCounterImageCommandArg>(),
+            DeleteFileFromBuffer<UtilityServicesBillImageCommandArg>(),
+            DeleteFileFromBuffer<CommunityServicesBillImageCommandArg>()
         );
     }
 
-    private Task DeleteFileFromBuffer(string? path)
+    private Task DeleteFileFromBuffer<T>() where T: IPathCommandArg
     {
-        if (path == null)
+        var arg = _commandArgumentService.Get<T>();
+        if (arg == null)
         {
             return Task.CompletedTask;
         }
 
-        return _fileBufferService.DeleteFileAsync(path);
+        return _fileBufferService.DeleteFileAsync(arg.Path);
     }
 }

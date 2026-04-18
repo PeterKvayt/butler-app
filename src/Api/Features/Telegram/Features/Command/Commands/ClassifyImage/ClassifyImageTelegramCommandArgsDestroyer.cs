@@ -23,9 +23,9 @@ internal sealed class ClassifyImageTelegramCommandArgsDestroyer : ITelegramComma
     {
         var imageArg = _commandArgumentService.Get<ImageTelegramCommandArg>();
 
-        if (imageArg.HasValue)
+        if (imageArg != null)
         {
-            await _fileBufferService.DeleteFileAsync(imageArg.Value.Path);
+            await _fileBufferService.DeleteFileAsync(imageArg);
         }
     }
 }
