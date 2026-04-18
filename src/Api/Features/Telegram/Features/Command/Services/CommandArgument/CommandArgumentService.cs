@@ -20,13 +20,15 @@ internal sealed class CommandArgumentService : ICommandArgumentService
         _telegramCommandArgsDestroyerProvider = telegramCommandArgsDestroyerProvider;
     }
 
-    public T? Get<T>() where T : struct
+    // TODO: rewrite on async versions Get, Set, etc.
+
+    public T? Get<T>()
     {
         var key = GetKey<T>();
         return _cache.GetOrDefault<T?>(key, default);
     }
 
-    public T GetRequired<T>() where T : struct
+    public T GetRequired<T>()
     {
         return Get<T>() 
             ?? throw new InvalidOperationException($"Required argument of type {typeof(T).FullName} was null for user: {_httpContextAccessor.GetTelegramUserId()}");

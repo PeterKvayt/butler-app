@@ -1,11 +1,15 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
 
-namespace Api.Features.Telegram.Features.Command.Commands.SnapshotUtilityServices.Arguments;
-
-internal struct HotWaterCounterImageCommandArg
+internal sealed record HotWaterCounterImageCommandArg : IPathCommandArg
 {
-    public string Path;
+    public string Path { get; }
 
-    public static implicit operator HotWaterCounterImageCommandArg(string path) => new() { Path = path };
-    public static implicit operator string(HotWaterCounterImageCommandArg arg) => arg.Path;
+    private HotWaterCounterImageCommandArg(string path)
+    {
+        Path = path;
+    }
+
+
+    public static implicit operator HotWaterCounterImageCommandArg(string path) => new(path);
+    public static implicit operator string?(HotWaterCounterImageCommandArg? arg) => arg?.Path;
 }

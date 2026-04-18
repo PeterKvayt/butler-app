@@ -8,7 +8,6 @@ namespace Api.Features.Telegram.Features.Command.Commands.NeedLove;
 internal sealed class NeedLoveTelegramCommandArgsBuilder : ITelegramCommandArgsBuilder
 {
     private readonly ICommandArgumentService _commandArgumentService;
-    private ChatTelegramCommandArg? _chatArg;
 
     public NeedLoveTelegramCommandArgsBuilder(ICommandArgumentService commandArgumentService)
     {
@@ -17,12 +16,9 @@ internal sealed class NeedLoveTelegramCommandArgsBuilder : ITelegramCommandArgsB
 
     public ValueTask AddAgrumentAsync(Message message)
     {
-        _chatArg = _commandArgumentService.Get<ChatTelegramCommandArg>();
-
-        if (_chatArg == null)
+        if (_commandArgumentService.Get<ChatTelegramCommandArg>() == null)
         {
-            _chatArg = message.Chat.Id;
-            _commandArgumentService.Set(_chatArg);
+            _commandArgumentService.Set<ChatTelegramCommandArg>(message.Chat.Id);
         }
 
         return ValueTask.CompletedTask;
@@ -30,5 +26,5 @@ internal sealed class NeedLoveTelegramCommandArgsBuilder : ITelegramCommandArgsB
 
     public Task RequestNextAgrumentAsync() => Task.CompletedTask;
 
-    public bool IsArgumentsFilledIn() => _chatArg.HasValue;
+    public bool IsArgumentsFilledIn() => true;
 }

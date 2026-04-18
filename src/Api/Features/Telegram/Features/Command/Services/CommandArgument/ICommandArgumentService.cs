@@ -2,8 +2,8 @@
 {
     internal interface ICommandArgumentService
     {
-        T? Get<T>() where T: struct;
-        T GetRequired<T>() where T : struct;
+        T? Get<T>();
+        T GetRequired<T>();
         void Set<T>(T value);
         ValueTask ClearArgumentsAsync(string commandName);
     }
