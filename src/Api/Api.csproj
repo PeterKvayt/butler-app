@@ -15,13 +15,13 @@
 	<PackageReference Include="Microsoft.ML" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.ML" Version="5.0.0" />
 	<PackageReference Include="Microsoft.ML.ImageAnalytics" Version="5.0.0" />
-	<PackageReference Include="Microsoft.ML.TensorFlow" Version="5.0.0" />
-	<PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.16.0" />
+	<PackageReference Include="Microsoft.ML.OnnxTransformer" Version="5.0.0" />
+	<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.4" />
 	<PackageReference Include="ZiggyCreatures.FusionCache" Version="2.6.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Features\Telegram\Features\Command\Commands\ClassifyImage\image-classifier-model--2026-03-22T18-29-16.zip">
+    <None Update="Features\Telegram\Features\Command\Commands\ClassifyImage\image-classifier-model--2026-04-21T11-51-08.onnx.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
