@@ -35,7 +35,7 @@ internal static class Composition
 
         builder.Services.TryAddSingleton(TimeProvider.System);
 
-        var mlModelPath = Path.Combine(Environment.CurrentDirectory, "Features", "Telegram", "Features", "Command", "Commands", "ClassifyImage", "image-classifier-model--2026-03-22T18-29-16.zip");
+        var mlModelPath = Path.Combine(Environment.CurrentDirectory, "Features", "Telegram", "Features", "Command", "Commands", "ClassifyImage", "image-classifier-model--2026-04-21T11-51-08.onnx.zip");
         builder.Services
             .AddCommand<ClassifyImageTelegramCommand, ClassifyImageTelegramCommandArgsBuilder, ClassifyImageTelegramCommandArgsDestroyer>(CommandNames.ClassifyImage)
             .AddPredictionEnginePool<ImageData, ImagePrediction>().FromFile(mlModelPath);
